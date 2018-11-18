@@ -34,8 +34,8 @@ ed linear unit (ReLU)
    
     self.layers = nn.Sequential(*layers)
 
-    def forward(self, x):
-      return self.layers[x]
+  def forward(self, x):
+    return self.layers[x]
        
 
 class Contract(nn.Module):
@@ -56,8 +56,8 @@ class Contract(nn.Module):
     layers.append(DoubleConvolution(input_channel, output_channel))
     self.layers = nn.Sequential(*layers)
     
-    def forward(self, x):
-      return self.layers[x]
+  def forward(self, x):
+    return self.layers[x]
     
 class Expand(nn.Module):
   def __init__(self, input_channel, output_channel):
@@ -79,14 +79,14 @@ class Expand(nn.Module):
     self.layers = DoubleConvolution(input_channel, output_channel)
     
 
-def forward(self, x1, x2):
-  x1 = self.up_conv(x1)
-  delta_x = x1.size()[2] - x2.size()[2]
-  delta_y = x1.size()[3] - x2.size()[3]
-  x2 = F.pad(x1, pad=(delta_x//2, delta_y//2) , mode='constant', value=0)
-  x = torch.cat(seq = (x2, x1), dim=1)
-  x = self.layers(x)
-  return x
+  def forward(self, x1, x2):
+    x1 = self.up_conv(x1)
+    delta_x = x1.size()[2] - x2.size()[2]
+    delta_y = x1.size()[3] - x2.size()[3]
+    x2 = F.pad(x1, pad=(delta_x//2, delta_y//2) , mode='constant', value=0)
+    x = torch.cat(seq = (x2, x1), dim=1)
+    x = self.layers(x)
+    return x
   
     
 class FinalConvolution(nn.Module):
@@ -109,4 +109,78 @@ class FinalConvolution(nn.Module):
     return self.layer(x)
     
     
-
+class UNet(nn.Module):
+  def __init__(self, input_channels=1, output_channels=2, depth=5, filters=64):
+    """
+    Implementation of U-Net.
+      Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015)
+      [https://arxiv.org/abs/1505.04597]
+      
+      Note: Default arguments are based on mentioned paper implementation.
+      
+      Args:
+        **input_channels**: number of input channels of input images to network.
+        
+        **output_channels**: number of output channels of output images of network.
+        
+        **depth**: depth of network
+        
+        **filters**: number of filters in each layer (Each layer x2 the value).
+          
+    """
+    
+    super(UNet, self).__init__()
+    self.input_channels = input_channels
+    self.output_channels = output_channels
+    self.depth = depth
+    self.filters = filters
+    
+    self.contracting_path = nn.ModuleList() # left side of shape of network in the paper
+    self.expansive_path = nn.ModuleList() # right side of shape of network in the paper
+    
+    prev_channels = self.input_channels
+    
+    self.contracting_path.append(DoubleConvolution(prev_channels, filters))
+    prev_channels = filters
+    filters *=2
+    for _ in range(depth-1):
+      self.contracting_path.append(Contract(prev_channels, filters))
+      prev_channels = filters
+      filters *= 2
+     
+    filters = prev_channels//2
+    for _ in reversed(range(depth-1)):
+      self.expansive_path.append(Expand(prev_channels, filters))
+      prev_channels = filters
+      filters //= 2
+    
+    self.expansive_path.append(FinalConvolution(prev_channels, output_channels))
+  
+  def forward(self, x):
+    
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  
+  
+  
+  
