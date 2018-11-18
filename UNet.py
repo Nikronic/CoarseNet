@@ -59,10 +59,54 @@ class Contract(nn.Module):
     def forward(self, x):
       return self.layers[x]
     
+class Expand(nn.Module):
+  def __init__(self, input_channel, output_channel):
+    """
+    This path consists of an upsampling of the feature map followed by a 
+    2x2 convolution ("up-convolution" or Transformed Convolution) that halves the number of 
+    feature channels, a concatnation with the correspondingly cropped feature map from Cantract phase and
+    a DoubleConvolution 
     
+    Args:
+      
+      **input_channel**: input channel size
+      
+      **output_channel**: output channel size
     
+    """
+    super(Expand, self).__init__()
+    self.up_conv = nn.ConvTranspose2d(input_channel//2, output_channel//2, kernel_size=2, stride=2)
+    self.layers = DoubleConvolution(input_channel, output_channel)
     
+
+def forward(self, x1, x2):
+  x1 = self.up_conv(x1)
+  delta_x = x1.size()[2] - x2.size()[2]
+  delta_y = x1.size()[3] - x2.size()[3]
+  x2 = F.pad(x1, pad=(delta_x//2, delta_y//2) , mode='constant', value=0)
+  x = torch.cat(seq = (x2, x1), dim=1)
+  x = self.layers(x)
+  return x
+  
     
+class FinalConvolution(nn.Module):
+  def __init__(self, input_channel, output_channel):
+    """
+    At the final layer, a 1x1 convolution is used to map each 64-component feature vector to the desired
+    number of classes.
+    
+    Args:
+      
+      **input_channel**: input channel size
+      
+      **output_channel**: output channel size
+      
+    """
+    super(FinalConvolution, self).__init__()
+    self.layer =  nn.Conv2d(input_channel, output_channel, kernel_size=1)
+    
+  def forward(self, x):
+    return self.layer(x)
     
     
 
