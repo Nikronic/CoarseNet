@@ -25,6 +25,9 @@ ed linear unit (ReLU)
       **output_channel**: output channel size
     """
     
+    assert(input_channel>0 and output_channel >0)
+    assert(input_channel <output_channel)
+    
     
     super(DoubleConvolution, self).__init__()
     layers = []
@@ -177,7 +180,8 @@ class UNet(nn.Module):
   
 from torch.autograd import Variable
 import numpy as np
-model = UNet()
-x = Variable(torch.FloatTensor(np.random.random((1, 3, 320, 320))))
-x = torch.randn(1, 1, 320, 320)
+model = Contract(512,1024)
+#x = Variable(torch.FloatTensor(np.random.random((1, 3, 320, 320))))
+x = torch.randn(1, 1, 572, 572)
 out = model(x)
+out.shape
