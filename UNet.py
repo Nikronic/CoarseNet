@@ -37,5 +37,32 @@ ed linear unit (ReLU)
     def forward(self, x):
       return self.layers[x]
        
-       
-       
+
+class Contract(nn.Module):
+  def __init__(self, input_channel, output_channel):
+    """
+    It consists of a DoubleConvolution followed by a 2x2 MaxPooling operation with stride 2 for downsampling.
+    
+    Args:
+      
+      **input_channel**: input channel size
+      
+      **output_channel**: output channel size
+      
+    """
+    super(Contract, self).__init__()
+    layers = []
+    layers.append(nn.MaxPool2d(stride=2))
+    layers.append(DoubleConvolution(input_channel, output_channel))
+    self.layers = nn.Sequential(*layers)
+    
+    def forward(self, x):
+      return self.layers[x]
+    
+    
+    
+    
+    
+    
+    
+
