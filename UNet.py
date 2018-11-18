@@ -54,6 +54,11 @@ class Contract(nn.Module):
       **output_channel**: output channel size
       
     """
+    
+    assert(input_channel*2 == output_channel)
+    assert(input_channel>0 and output_channel >0)
+    assert(input_channel <output_channel)
+    
     super(Contract, self).__init__()
     layers = []
     layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
@@ -180,8 +185,10 @@ class UNet(nn.Module):
   
 from torch.autograd import Variable
 import numpy as np
-model = Contract(512,1024)
+model = DoubleConvolution(1,64)
 #x = Variable(torch.FloatTensor(np.random.random((1, 3, 320, 320))))
 x = torch.randn(1, 1, 572, 572)
 out = model(x)
+model = Contract(64,128)
+out = model(out)
 out.shape
