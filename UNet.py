@@ -25,17 +25,18 @@ ed linear unit (ReLU)
       **output_channel**: output channel size
     """
     
+    
     super(DoubleConvolution, self).__init__()
     layers = []
-    layers.add(nn.Conv2d(input_channel, output_channel, kernel_size=3, stride=1))
-    layers.add(nn.ReLU())
-    layers.add(nn.Conv2d(output_channel, output_channel, kernel_size = 3, stride=1))
-    layers.add(nn.ReLU())
+    layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=3, stride=1))
+    layers.append(nn.ReLU())
+    layers.append(nn.Conv2d(output_channel, output_channel, kernel_size = 3, stride=1))
+    layers.append(nn.ReLU())
    
     self.layers = nn.Sequential(*layers)
 
   def forward(self, x):
-    return self.layers[x]
+    return self.layers(x)
        
 
 class Contract(nn.Module):
@@ -52,12 +53,12 @@ class Contract(nn.Module):
     """
     super(Contract, self).__init__()
     layers = []
-    layers.append(nn.MaxPool2d(stride=2))
+    layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
     layers.append(DoubleConvolution(input_channel, output_channel))
     self.layers = nn.Sequential(*layers)
     
   def forward(self, x):
-    return self.layers[x]
+    return self.layers(x)
     
 class Expand(nn.Module):
   def __init__(self, input_channel, output_channel):
@@ -154,33 +155,29 @@ class UNet(nn.Module):
       prev_channels = filters
       filters //= 2
     
-    self.expansive_path.append(FinalConvolution(prev_channels, output_channels))
+    self.final = FinalConvolution(prev_channels, output_channels)
   
   def forward(self, x):
+    layers = []
+    for _, l in enumerate(self.contracting_path):
+      layers.append(l(x))
     
-      
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    up = self.expanding_path[0]
+    x = up(layers[-1], layers[-2])
+    for i, l in enumerate(self.expanding_path):
+      if i == 0:
+        pass
+      else:
+        x = l(x, layers[-i-2])
+    x = self.final(x)
+    return F.Sigmoid(x)
     
     
   
   
-  
-  
+from torch.autograd import Variable
+import numpy as np
+model = UNet()
+x = Variable(torch.FloatTensor(np.random.random((1, 3, 320, 320))))
+x = torch.randn(1, 1, 320, 320)
+out = model(x)
