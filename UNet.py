@@ -173,24 +173,23 @@ class UNet(nn.Module):
         x = layers[i-1]
         layers.append(l(x))
     
-    up = self.expanding_path[0]
+    up = self.expansive_path[0]
     x = up(layers[-1], layers[-2])
-    for i, l in enumerate(self.expanding_path):
+    for i, l in enumerate(self.expansive_path):
       if i == 0:
         pass
       else:
         x = l(x, layers[-i-2])
-    x = self.final(x)
+    x = final(x)
     return x
     
     
-  
-  
-from torch.autograd import Variable
-import numpy as np
-model = DoubleConvolution(1,64)
-#x = Variable(torch.FloatTensor(np.random.random((1, 3, 320, 320))))
 x = torch.randn(1, 1, 572, 572)
+model = UNet()
+o = model(x)
+
+
+model = DoubleConvolution(1,64)
 out = model(x)
 model = Contract(64,128)
 out2 = model(out)
@@ -213,9 +212,3 @@ model = Expand(128, 64)
 in4 = model(in3, out)
 model = FinalConvolution(64,2)
 final = model(in4)
-
-
-
-
-out3pad = F.pad(out3, pad=(delta_x//2, delta_y//2, delta_x//2, delta_y//2) , mode='constant', value=0)
-out3pad.shape
