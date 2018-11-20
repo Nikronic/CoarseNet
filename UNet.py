@@ -26,7 +26,6 @@ ed linear unit (ReLU)
     """
     
     assert(input_channel>0 and output_channel >0)
-    assert(input_channel <output_channel)
     
     
     super(DoubleConvolution, self).__init__()
@@ -84,7 +83,7 @@ class Expand(nn.Module):
     
     """
     super(Expand, self).__init__()
-    self.up_conv = nn.ConvTranspose2d(input_channel//2, output_channel//2, kernel_size=2, stride=2)
+    self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2)
     self.layers = DoubleConvolution(input_channel, output_channel)
     
 
@@ -92,9 +91,9 @@ class Expand(nn.Module):
     x1 = self.up_conv(x1)
     delta_x = x1.size()[2] - x2.size()[2]
     delta_y = x1.size()[3] - x2.size()[3]
-    x2 = F.pad(x1, pad=(delta_x//2, delta_y//2) , mode='constant', value=0)
-    x = torch.cat(seq = (x2, x1), dim=1)
-    x = self.layers(x)
+    x2 = F.pad(x2, pad=(delta_x//2, delta_y//2, delta_x//2, delta_y//2) , mode='constant', value=0)
+    x12 = torch.cat((x2, x1), dim=1)
+    x = self.layers(x12)
     return x
   
     
@@ -167,8 +166,12 @@ class UNet(nn.Module):
   
   def forward(self, x):
     layers = []
-    for _, l in enumerate(self.contracting_path):
-      layers.append(l(x))
+    for i, l in enumerate(self.contracting_path):
+      if i==0:
+        layers.append(l(x))
+      else:
+        x = layers[i-1]
+        layers.append(l(x))
     
     up = self.expanding_path[0]
     x = up(layers[-1], layers[-2])
@@ -178,7 +181,7 @@ class UNet(nn.Module):
       else:
         x = l(x, layers[-i-2])
     x = self.final(x)
-    return F.Sigmoid(x)
+    return x
     
     
   
@@ -190,5 +193,29 @@ model = DoubleConvolution(1,64)
 x = torch.randn(1, 1, 572, 572)
 out = model(x)
 model = Contract(64,128)
-out = model(out)
-out.shape
+out2 = model(out)
+model = Contract(128,256)
+out3 = model(out2)
+model = Contract(256,512)
+out4 = model(out3)
+model = Contract(512,1024)
+out5 = model(out4)
+out5.shape
+
+
+model = Expand(1024, 512)
+in1 = model(out5,out4)
+model = Expand(512, 256)
+in2 = model(in1, out3)
+model = Expand(256, 128)
+in3 = model(in2, out2)
+model = Expand(128, 64)
+in4 = model(in3, out)
+model = FinalConvolution(64,2)
+final = model(in4)
+
+
+
+
+out3pad = F.pad(out3, pad=(delta_x//2, delta_y//2, delta_x//2, delta_y//2) , mode='constant', value=0)
+out3pad.shape
