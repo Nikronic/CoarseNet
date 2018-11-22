@@ -1,5 +1,5 @@
 # U-Net
-![u net structure](https://1drv.ms/u/s!ApJ0ieVzUhjioAp0O78l3wjZB1HM)
+![u net structure](https://u9qcsa.am.files.1drv.com/y4mfknEQpOtArPojQ2nvN1cOwci_zxLM5FoFynKOV2v9CSRrz21vlZeR7zo1cmn4Tm7fMBo9u_FpMPn-ZRyS2Oxdf800tE0K2BGzb5Dp7CYjYbTzCjSrtd2JyWEqKa7kJW4IX9tO4TIJDdRdPLa2_k7GyBkLyJBfX7Y2ws5bbHUm8qb4fb8j1T_6w8YOHkRy6bxbXlITze31atOQYP_f1v17g?width=823&height=513&cropmode=none)
 
 U-net consists of a contracting
 path (left side) and an expansive path (right side).<br>
