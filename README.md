@@ -23,7 +23,7 @@ every convolution. At the final layer a 1x1 convolution is used to map each 64-
 To allow a seamless tiling of the output segmentation map (see Figure 2), it is important to select the input tile size such that all 2x2 max-pooling operations are applied to a layer with an even x- and y-size.<br>
 
 ## Network Result Example
-![example](https://1drv.ms/u/s!ApJ0ieVzUhjioAuKUFiPz9TVjdl4 Example)
+![example](https://utqcsa.am.files.1drv.com/y4mtuNLTy3W1hyGp1Je9JtrVzQOiqShDAlCcHHkTvfXsH8Au_aBIWnvq65T4zLqrs95xV-mGu3l_rqRLkcOMh1UWRMjWGaVr1-3_BmU52Kfb49PPXSzm4YBgjdCssRA8sHWUY6ctyTyMgMdF-TKdGbFrDkT-QG96OHzIzMX7mD97XYcDJLAjfhqcaG1ooKQZ33NqPWURGMVQ4ABbtKpbWRjvA?width=868&height=399&cropmode=none)
 
 
 ## Implementation
