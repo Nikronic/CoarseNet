@@ -1,5 +1,5 @@
 # U-Net
-<img src='./unet.jpg'>
+![u net structure](https://1drv.ms/u/s!ApJ0ieVzUhjioAp0O78l3wjZB1HM)
 
 U-net consists of a contracting
 path (left side) and an expansive path (right side).<br>
@@ -23,7 +23,7 @@ every convolution. At the final layer a 1x1 convolution is used to map each 64-
 To allow a seamless tiling of the output segmentation map (see Figure 2), it is important to select the input tile size such that all 2x2 max-pooling operations are applied to a layer with an even x- and y-size.<br>
 
 ## Network Result Example
-<img src='https://1drv.ms/u/s!ApJ0ieVzUhjioAuKUFiPz9TVjdl4'>
+![example](https://1drv.ms/u/s!ApJ0ieVzUhjioAuKUFiPz9TVjdl4 Example)
 
 
 ## Implementation
