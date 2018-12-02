@@ -16,11 +16,8 @@ class CL(nn.Module):
         It consists of the 4x4 convolutions with stride=2, padding=1, each followed by
         a rectified linear unit (ReLU)
 
-        Args:
-
-          **input_channel**: input channel size
-
-          **output_channel**: output channel size
+        :param input_channel: input channel size
+        :param output_channel: output channel size
         """
 
         assert (input_channel > 0 and output_channel > 0)
@@ -42,8 +39,8 @@ class CBL(nn.Module):
         It consists of the 4x4 convolutions with stride=2, padding=1, and a batch normalization, followed by
         a rectified linear unit (ReLU)
 
-        :param **input_channel**: input channel size
-        :param **output_channel**: output channel size
+        :param input_channel: input channel size
+        :param output_channel: output channel size
         """
         assert (input_channel > 0 and output_channel > 0)
 
@@ -65,10 +62,10 @@ class CE(nn.Module):
         It consists of the 4x4 convolutions with stride=2, padding=1, each followed by
         a exponential linear unit (ELU)
 
-        :param **input_channel**: input channel size
-        :param **output_channel**: output channel size
-        :param **ks**: kernel size
-        :param **s**: stride size
+        :param input_channel: input channel size
+        :param output_channel: output channel size
+        :param ks: kernel size
+        :param s: stride size
         """
         assert (input_channel > 0 and output_channel > 0)
 
@@ -88,15 +85,13 @@ class Contract(nn.Module):
         """
         It consists of a CL or CBL followed by a 2x2 MaxPooling operation with stride 2 for down sampling.
 
-        Args:
-          input_channel: input channel size
-          output_channel: output channel size
-          is_cl: using Convolution->ReLU (CL class) or Convolution->BathNorm->ReLU (CBL class)
+
+        :param input_channel: input channel size
+        :param output_channel: output channel size
+        :param is_cl: using Convolution->ReLU (CL class) or Convolution->BathNorm->ReLU (CBL class)
         """
 
-        assert (input_channel * 2 == output_channel)
         assert (input_channel > 0 and output_channel > 0)
-        assert (input_channel < output_channel)
 
         super(Contract, self).__init__()
 
@@ -116,15 +111,13 @@ class Contract(nn.Module):
 class Expand(nn.Module):
     def __init__(self, input_channel, output_channel, ks=4, s=2):
         """
-        This path consists of an upsampling of the feature map followed by a
+        This path consists of an up sampling of the feature map followed by a
         4x4 convolution ("up-convolution" or Transformed Convolution) that halves the number of
         feature channels, a concatenation with the correspondingly cropped feature map from Contract phase
 
-        Args:
 
-          input_channel: input channel size
-          output_channel: output channel size
-
+        :param input_channel: input channel size
+        :param output_channel: output channel size
         """
         super(Expand, self).__init__()
 
@@ -147,12 +140,8 @@ class C(nn.Module):
         At the final layer, a 3x3 convolution is used to map each 64-component feature vector to the desired
         number of classes.
 
-        Args:
-
-          **input_channel**: input channel size
-
-          **output_channel**: output channel size
-
+        :param input_channel**: input channel size
+        :param output_channel**: output channel size
         """
         super(C, self).__init__()
         self.layer = nn.Conv2d(input_channel, output_channel, kernel_size=3, padding=1)
@@ -162,19 +151,14 @@ class C(nn.Module):
 
 
 class CoarseNet(nn.Module):
-    def __init__(self, input_channels=1, output_channels=2, depth=5, filters=64):
+    def __init__(self, input_channels=3, output_channels=3, depth=5, filters=64):
         """
-        Implementation of CoarseNet, a modified version of UNet. (Part of TODO add paper citation)
+        Implementation of CoarseNet, a modified version of UNet. (Part of )TODO add paper citation
 
-          Args:
-            **input_channels**: number of input channels of input images to network.
-
-            **output_channels**: number of output channels of output images of network.
-
-            **depth**: depth of network
-
-            **filters**: number of filters in each layer (Each layer x2 the value).
-
+        :param input_channels: number of input channels of input images to network.
+        :param output_channels: number of output channels of output images of network.
+        :param depth: depth of network
+        :param filters: number of filters in each layer (Each layer x2 the value).
         """
 
         super(CoarseNet, self).__init__()
@@ -189,8 +173,13 @@ class CoarseNet(nn.Module):
         prev_channels = self.input_channels
 
         prev_channels = input_channels
-        for _ in range(depth):
-            self.contracting_path.append(Contract(prev_channels, filters))
+        for i in range(depth):
+            if i==0:
+                self.contracting_path.append(Contract(prev_channels, filters, is_cl=True))
+            elif i==depth-1:
+                self.contracting_path.append(Contract(prev_channels, filters, is_cl=True))
+            else:
+                self.contracting_path.append(Contract(prev_channels, filters))
             prev_channels = filters
             filters *= 2
 
@@ -227,11 +216,11 @@ class CoarseNet(nn.Module):
         return x
 
 
-x = torch.randn(1, 1, 572, 572)
+x = torch.randn(1, 3, 512, 512) 
 model = CoarseNet()
 o = model(x)
 
-model = DoubleConvolution(1, 64)
+model = Contract(3, 64, is_cl=True)
 out = model(x)
 model = Contract(64, 128)
 out2 = model(out)
@@ -239,9 +228,8 @@ model = Contract(128, 256)
 out3 = model(out2)
 model = Contract(256, 512)
 out4 = model(out3)
-model = Contract(512, 1024)
+model = Contract(512, 512, is_cl=True)
 out5 = model(out4)
-out5.shape
 
 model = Expand(1024, 512)
 in1 = model(out5, out4)
@@ -251,5 +239,5 @@ model = Expand(256, 128)
 in3 = model(in2, out2)
 model = Expand(128, 64)
 in4 = model(in3, out)
-model = FinalConvolution(64, 2)
+model = C(64, 3)
 final = model(in4)
