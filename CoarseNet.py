@@ -25,7 +25,7 @@ class CL(nn.Module):
         super(CL, self).__init__()
         layers = []
         layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.ReLU())
+        layers.append(nn.LeakyReLU(0.2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -48,7 +48,7 @@ class CBL(nn.Module):
         layers = []
         layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1))
         layers.append(nn.BatchNorm2d(num_features=output_channel))
-        layers.append(nn.ReLU())
+        layers.append(nn.LeakyReLU(0.2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -121,7 +121,7 @@ class Expand(nn.Module):
         """
         super(Expand, self).__init__()
 
-        self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2, padding=1)
+        self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2)
         self.layers = CE(input_channel, output_channel, ks, s)
 
     def forward(self, x1, x2):
@@ -212,13 +212,13 @@ class CoarseNet(nn.Module):
                 pass
             else:
                 x = l(x, layers[-i - 2])
-        x = final(x)
+        x = self.final(x)
         return x
 
 
-x = torch.randn(1, 3, 512, 512) 
-model = CoarseNet()
-o = model(x)
+x = torch.randn(1, 3, 1024, 1024)
+#model = CoarseNet()
+#o = model(x)
 
 model = Contract(3, 64, is_cl=True)
 out = model(x)
