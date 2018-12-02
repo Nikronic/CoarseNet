@@ -195,12 +195,17 @@ class CoarseNet(nn.Module):
             filters *= 2
 
         filters = prev_channels // 2
-        for _ in reversed(range(depth - 1)):
-            self.expansive_path.append(Expand(prev_channels, filters))
+        for i in reversed(range(depth + 1)):
+            if i == 1:
+                self.expansive_path.append(Expand(prev_channels, prev_channels))
+            elif i == 0:
+                self.expansive_path.append(Expand(prev_channels, filters, ks=3, s=1))
+            else:
+                self.expansive_path.append(Expand(prev_channels, filters))
             prev_channels = filters
             filters //= 2
 
-        self.final = FinalConvolution(prev_channels, output_channels)
+        self.final = C(prev_channels, output_channels)
 
     def forward(self, x):
         layers = []
@@ -223,7 +228,7 @@ class CoarseNet(nn.Module):
 
 
 x = torch.randn(1, 1, 572, 572)
-model = UNet()
+model = CoarseNet()
 o = model(x)
 
 model = DoubleConvolution(1, 64)
