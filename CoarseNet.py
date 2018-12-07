@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 18 16:54:05 2018
-
-@author: Mohammad Doosti Lakhani
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,7 +7,7 @@ class CL(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
         It consists of the 4x4 convolutions with stride=2, padding=1, each followed by
-        a rectified linear unit (ReLU)
+        a leaky rectified linear unit (ReLU)
 
         :param input_channel: input channel size
         :param output_channel: output channel size
@@ -37,7 +30,7 @@ class CBL(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
         It consists of the 4x4 convolutions with stride=2, padding=1, and a batch normalization, followed by
-        a rectified linear unit (ReLU)
+        a leaky rectified linear unit (ReLU)
 
         :param input_channel: input channel size
         :param output_channel: output channel size
@@ -81,7 +74,7 @@ class CE(nn.Module):
 
 
 class Contract(nn.Module):
-    def __init__(self, input_channel, output_channel, is_cl=False):
+    def __init__(self, input_channel, output_channel, is_cl=False, final=False):
         """
         It consists of a CL or CBL followed by a 2x2 MaxPooling operation with stride 2 for down sampling.
 
@@ -100,7 +93,8 @@ class Contract(nn.Module):
             layers.append(CL(input_channel, output_channel))
         else:
             layers.append(CBL(input_channel, output_channel))
-        layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
+        if not final:
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=1))
 
         self.layers = nn.Sequential(*layers)
 
@@ -109,7 +103,7 @@ class Contract(nn.Module):
 
 
 class Expand(nn.Module):
-    def __init__(self, input_channel, output_channel, ks=4, s=2):
+    def __init__(self, input_channel, output_channel, ks=4, s=2, first=False):
         """
         This path consists of an up sampling of the feature map followed by a
         4x4 convolution ("up-convolution" or Transformed Convolution) that halves the number of
@@ -120,9 +114,14 @@ class Expand(nn.Module):
         :param output_channel: output channel size
         """
         super(Expand, self).__init__()
-
+        
+       
         self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2)
-        self.layers = CE(input_channel, output_channel, ks, s)
+        
+        if not first:
+          self.layers = CE(input_channel, output_channel, ks, s)  
+        else:
+          self.layers = CE(input_channel*2, output_channel, ks, s)
 
     def forward(self, x1, x2):
         x1 = self.up_conv(x1)
@@ -140,8 +139,8 @@ class C(nn.Module):
         At the final layer, a 3x3 convolution is used to map each 64-component feature vector to the desired
         number of classes.
 
-        :param input_channel**: input channel size
-        :param output_channel**: output channel size
+        :param input_channel: input channel size
+        :param output_channel: output channel size
         """
         super(C, self).__init__()
         self.layer = nn.Conv2d(input_channel, output_channel, kernel_size=3, padding=1)
@@ -231,7 +230,7 @@ out4 = model(out3)
 model = Contract(512, 512, is_cl=True)
 out5 = model(out4)
 
-model = Expand(1024, 512)
+model = Expand(512, 512, first=True)
 in1 = model(out5, out4)
 model = Expand(512, 256)
 in2 = model(in1, out3)
