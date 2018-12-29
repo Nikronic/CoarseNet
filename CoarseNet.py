@@ -16,10 +16,8 @@ class CL(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CL, self).__init__()
-        layers = []
-        layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.LeakyReLU(0.2))
-
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2),
+                  nn.Conv2d(output_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -38,11 +36,9 @@ class CBL(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CBL, self).__init__()
-        layers = []
-        layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.BatchNorm2d(num_features=output_channel))
-        layers.append(nn.LeakyReLU(0.2))
-
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1),
+                  nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2),
+                  nn.Conv2d(output_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -63,10 +59,8 @@ class CE(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CE, self).__init__()
-        layers = []
-        layers.append(nn.Conv2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1))
-        layers.append(nn.ELU(alpha=1))
-
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1),
+                  nn.Conv2d(output_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -74,7 +68,7 @@ class CE(nn.Module):
 
 
 class Contract(nn.Module):
-    def __init__(self, input_channel, output_channel, is_cl=False, final=False):
+    def __init__(self, input_channel, output_channel, is_cl=False, final_layer=False):
         """
         It consists of a CL or CBL followed by a 2x2 MaxPooling operation with stride 2 for down sampling.
 
@@ -93,8 +87,8 @@ class Contract(nn.Module):
             layers.append(CL(input_channel, output_channel))
         else:
             layers.append(CBL(input_channel, output_channel))
-        if not final:
-            layers.append(nn.MaxPool2d(kernel_size=2, stride=1))
+        if not final_layer:
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -114,14 +108,9 @@ class Expand(nn.Module):
         :param output_channel: output channel size
         """
         super(Expand, self).__init__()
-        
-       
+
         self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2)
-        
-        if not first:
-          self.layers = CE(input_channel, output_channel, ks, s)  
-        else:
-          self.layers = CE(input_channel*2, output_channel, ks, s)
+        self.layers = CE(output_channel * 2, output_channel, ks, s)
 
     def forward(self, x1, x2):
         x1 = self.up_conv(x1)
@@ -143,16 +132,17 @@ class C(nn.Module):
         :param output_channel: output channel size
         """
         super(C, self).__init__()
-        self.layer = nn.Conv2d(input_channel, output_channel, kernel_size=3, padding=1)
+        self.layer = nn.Conv2d(input_channel, output_channel, kernel_size=3, padding=1, stride=1)
 
     def forward(self, x):
         return self.layer(x)
 
 
 class CoarseNet(nn.Module):
-    def __init__(self, input_channels=3, output_channels=3, depth=5, filters=64):
+    def __init__(self, input_channels=3, output_channels=3):
         """
-        Implementation of CoarseNet, a modified version of UNet. (Part of )TODO add paper citation
+        Implementation of CoarseNet, a modified version of UNet.
+        (https://arxiv.org/abs/1505.04597 - Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015))
 
         :param input_channels: number of input channels of input images to network.
         :param output_channels: number of output channels of output images of network.
@@ -163,61 +153,41 @@ class CoarseNet(nn.Module):
         super(CoarseNet, self).__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
-        self.depth = depth
-        self.filters = filters
 
-        self.contracting_path = nn.ModuleList()  # left side of shape of network in the paper
-        self.expansive_path = nn.ModuleList()  # right side of shape of network in the paper
+        # Encoder
+        self.cl0 = Contract(input_channels, 64, is_cl=True)
+        self.cbl0 = Contract(64, 128)
+        self.cbl1 = Contract(128, 256)
+        self.cbl2 = Contract(256, 512)
+        self.cl1 = Contract(512, 512, is_cl=True, final_layer=True)
 
-        prev_channels = self.input_channels
+        # Decoder
+        self.ce0 = Expand(512, 512)
+        self.ce1 = Expand(512, 256)
+        self.ce2 = Expand(256, 128)
+        self.ce3 = Expand(128, 64)
+        self.ce4 = Expand(64, 64)
+        self.ce5 = Expand(64, 64, ks=3, s=1)
 
-        prev_channels = input_channels
-        for i in range(depth):
-            if i==0:
-                self.contracting_path.append(Contract(prev_channels, filters, is_cl=True))
-            elif i==depth-1:
-                self.contracting_path.append(Contract(prev_channels, filters, is_cl=True))
-            else:
-                self.contracting_path.append(Contract(prev_channels, filters))
-            prev_channels = filters
-            filters *= 2
-
-        filters = prev_channels // 2
-        for i in reversed(range(depth + 1)):
-            if i == 1:
-                self.expansive_path.append(Expand(prev_channels, prev_channels))
-            elif i == 0:
-                self.expansive_path.append(Expand(prev_channels, filters, ks=3, s=1))
-            else:
-                self.expansive_path.append(Expand(prev_channels, filters))
-            prev_channels = filters
-            filters //= 2
-
-        self.final = C(prev_channels, output_channels)
+        # final
+        self.final = C(64, self.output_channels)
 
     def forward(self, x):
-        layers = []
-        for i, l in enumerate(self.contracting_path):
-            if i == 0:
-                layers.append(l(x))
-            else:
-                x = layers[i - 1]
-                layers.append(l(x))
+        c1 = self.cl0(x)  # 3>64
+        c2 = self.cbl0(c1)  # 64>128
+        c3 = self.cbl1(c2)  # 128>256
+        c4 = self.cbl2(c3)  # 256>512
+        c5 = self.cl1(c4)  # 512>512
 
-        up = self.expansive_path[0]
-        x = up(layers[-1], layers[-2])
-        for i, l in enumerate(self.expansive_path):
-            if i == 0:
-                pass
-            else:
-                x = l(x, layers[-i - 2])
-        x = self.final(x)
-        return x
+        e0 = self.ce0(c5, c4)  # 512>512
+        e1 = self.ce1(e0, c3)  # 512>256
+        e2 = self.ce2(e1, c2)  # 256>128
+        e3 = self.ce3(e2, c1)  # 128>64
 
 
-x = torch.randn(1, 3, 1024, 1024)
-#model = CoarseNet()
-#o = model(x)
+x = torch.randn(1, 3, 256, 256)
+# model = CoarseNet()
+# o = model(x)
 
 model = Contract(3, 64, is_cl=True)
 out = model(x)
@@ -240,3 +210,5 @@ model = Expand(128, 64)
 in4 = model(in3, out)
 model = C(64, 3)
 final = model(in4)
+
+F.interpolate(x, scale_factor=2, mode='bilinear').shape
