@@ -87,8 +87,6 @@ class Contract(nn.Module):
             layers.append(CL(input_channel, output_channel))
         else:
             layers.append(CBL(input_channel, output_channel))
-        # if not final_layer:
-        #    layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -117,8 +115,8 @@ class Expand(nn.Module):
         delta_x = x1.size()[2] - x2.size()[2]
         delta_y = x1.size()[3] - x2.size()[3]
         x2 = F.pad(x2, pad=(delta_x // 2, delta_y // 2, delta_x // 2, delta_y // 2), mode='constant', value=0)
-        x12 = torch.cat((x2, x1), dim=1)
-        x = self.layers(x12)
+        x = torch.cat((x2, x1), dim=1)
+        x = self.layers(x)
         return x
 
 
@@ -192,25 +190,23 @@ x = torch.randn(1, 3, 256, 256)
 # o = model(x)
 
 model = Contract(3, 64, is_cl=True)
-out = model(x)
+out = model(x)  # 64*128*128
 model = Contract(64, 128)
-out2 = model(out)
+out2 = model(out)  # 128*64*64
 model = Contract(128, 256)
-out3 = model(out2)
+out3 = model(out2)  # 256*32*32
 model = Contract(256, 512)
-out4 = model(out3)
+out4 = model(out3)  # 512*16*16
 model = Contract(512, 512, is_cl=True)
-out5 = model(out4)
+out5 = model(out4)  # 512*8*8
 
 model = Expand(512, 512, first=True)
-in1 = model(out4, out5)
+in1 = model(out4, out5)  # 512*16*16
 model = Expand(512, 256)
-in2 = model(in1, out3)
+in2 = model(in1, out3)  # 256*32*32
 model = Expand(256, 128)
-in3 = model(in2, out2)
+in3 = model(in2, out2)  # 128*64*64
 model = Expand(128, 64)
-in4 = model(in3, out)
-model = C(64, 3)
-final = model(in4)
-
-F.interpolate(x, scale_factor=2, mode='bilinear').shape
+in4 = model(in3, out)  # 64*128*128
+model = C(64, 3)  # 3*256*256
+final = model(in4)  # 3*256*256
