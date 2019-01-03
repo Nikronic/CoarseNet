@@ -1,8 +1,10 @@
+# %% Import libraries
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
+#%% Submodules
 class CL(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
@@ -16,8 +18,7 @@ class CL(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CL, self).__init__()
-        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2),
-                  nn.Conv2d(output_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -38,7 +39,7 @@ class CBL(nn.Module):
         super(CBL, self).__init__()
         layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1),
                   nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2),
-                  nn.Conv2d(output_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
+                  nn.LeakyReLU(0.2)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -59,8 +60,7 @@ class CE(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CE, self).__init__()
-        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1),
-                  nn.Conv2d(output_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1)]
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -87,8 +87,8 @@ class Contract(nn.Module):
             layers.append(CL(input_channel, output_channel))
         else:
             layers.append(CBL(input_channel, output_channel))
-        if not final_layer:
-            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
+        # if not final_layer:
+        #    layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -138,6 +138,7 @@ class C(nn.Module):
         return self.layer(x)
 
 
+#%% Main CLass
 class CoarseNet(nn.Module):
     def __init__(self, input_channels=3, output_channels=3):
         """
@@ -185,6 +186,7 @@ class CoarseNet(nn.Module):
         e3 = self.ce3(e2, c1)  # 128>64
 
 
+#%% tests
 x = torch.randn(1, 3, 256, 256)
 # model = CoarseNet()
 # o = model(x)
@@ -201,7 +203,7 @@ model = Contract(512, 512, is_cl=True)
 out5 = model(out4)
 
 model = Expand(512, 512, first=True)
-in1 = model(out5, out4)
+in1 = model(out4, out5)
 model = Expand(512, 256)
 in2 = model(in1, out3)
 model = Expand(256, 128)
