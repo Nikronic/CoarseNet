@@ -4,12 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-#%% Submodules
+# %% Submodules
 class CL(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
         It consists of the 4x4 convolutions with stride=2, padding=1, each followed by
-        a leaky rectified linear unit (ReLU)
+        a leaky rectified linear unit (Leaky ReLU)
 
         :param input_channel: input channel size
         :param output_channel: output channel size
@@ -25,6 +25,7 @@ class CL(nn.Module):
         return self.layers(x)
 
 
+# %%
 class CBL(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
@@ -46,6 +47,7 @@ class CBL(nn.Module):
         return self.layers(x)
 
 
+# %%
 class CE(nn.Module):
     def __init__(self, input_channel, output_channel, ks=4, s=2):
         """
@@ -60,22 +62,25 @@ class CE(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CE, self).__init__()
-        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1), nn.ELU(alpha=1)]
+        layers = [nn.ConvTranspose2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1),
+                  nn.ELU(alpha=1)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
         return self.layers(x)
 
 
+# %%
 class Contract(nn.Module):
-    def __init__(self, input_channel, output_channel, is_cl=False, final_layer=False):
+    def __init__(self, input_channel, output_channel, module='cbl'):
         """
         It consists of a CL or CBL followed by a 2x2 MaxPooling operation with stride 2 for down sampling.
 
 
         :param input_channel: input channel size
         :param output_channel: output channel size
-        :param is_cl: using Convolution->ReLU (CL class) or Convolution->BathNorm->ReLU (CBL class)
+        :param module: using Convolution->ReLU (CL class) or Convolution->BathNorm->ReLU (CBL class)
+                Convolution->ELU (CE class) for first layer of Expand (decoder) path
         """
 
         assert (input_channel > 0 and output_channel > 0)
@@ -83,8 +88,10 @@ class Contract(nn.Module):
         super(Contract, self).__init__()
 
         layers = []
-        if is_cl:
+        if module == 'cl':
             layers.append(CL(input_channel, output_channel))
+        elif module == 'ce':
+            layers.append(CE(input_channel, output_channel))
         else:
             layers.append(CBL(input_channel, output_channel))
 
@@ -94,8 +101,9 @@ class Contract(nn.Module):
         return self.layers(x)
 
 
+# %%
 class Expand(nn.Module):
-    def __init__(self, input_channel, output_channel, ks=4, s=2, first=False):
+    def __init__(self, input_channel, output_channel, ks=4, s=2):
         """
         This path consists of an up sampling of the feature map followed by a
         4x4 convolution ("up-convolution" or Transformed Convolution) that halves the number of
@@ -106,12 +114,9 @@ class Expand(nn.Module):
         :param output_channel: output channel size
         """
         super(Expand, self).__init__()
-
-        self.up_conv = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=2, stride=2)
-        self.layers = CE(output_channel * 2, output_channel, ks, s)
+        self.layers = CE(input_channel * 2, output_channel, ks, s)
 
     def forward(self, x1, x2):
-        x1 = self.up_conv(x1)
         delta_x = x1.size()[2] - x2.size()[2]
         delta_y = x1.size()[3] - x2.size()[3]
         x2 = F.pad(x2, pad=(delta_x // 2, delta_y // 2, delta_x // 2, delta_y // 2), mode='constant', value=0)
@@ -120,6 +125,7 @@ class Expand(nn.Module):
         return x
 
 
+# %%
 class C(nn.Module):
     def __init__(self, input_channel, output_channel):
         """
@@ -145,8 +151,6 @@ class CoarseNet(nn.Module):
 
         :param input_channels: number of input channels of input images to network.
         :param output_channels: number of output channels of output images of network.
-        :param depth: depth of network
-        :param filters: number of filters in each layer (Each layer x2 the value).
         """
 
         super(CoarseNet, self).__init__()
@@ -154,59 +158,68 @@ class CoarseNet(nn.Module):
         self.output_channels = output_channels
 
         # Encoder
-        self.cl0 = Contract(input_channels, 64, is_cl=True)
+        self.cl0 = Contract(input_channels, 64, module='cl')
         self.cbl0 = Contract(64, 128)
         self.cbl1 = Contract(128, 256)
         self.cbl2 = Contract(256, 512)
-        self.cl1 = Contract(512, 512, is_cl=True, final_layer=True)
+        self.cl1 = Contract(512, 512, module='cl')
 
         # Decoder
-        self.ce0 = Expand(512, 512)
+        self.ce0 = Contract(512, 512, module='ce')
         self.ce1 = Expand(512, 256)
         self.ce2 = Expand(256, 128)
         self.ce3 = Expand(128, 64)
         self.ce4 = Expand(64, 64)
-        self.ce5 = Expand(64, 64, ks=3, s=1)
+        self.ce5 = CE(64, 64, ks=3, s=1)
 
         # final
         self.final = C(64, self.output_channels)
 
     def forward(self, x):
-        c1 = self.cl0(x)  # 3>64
-        c2 = self.cbl0(c1)  # 64>128
-        c3 = self.cbl1(c2)  # 128>256
-        c4 = self.cbl2(c3)  # 256>512
-        c5 = self.cl1(c4)  # 512>512
+        out = self.cl0(x)  # 3>64
+        out2 = self.cbl0(out)  # 64>128
+        out3 = self.cbl1(out2)  # 128>256
+        out4 = self.cbl2(out3)  # 256>512
+        out5 = self.cl1(out4)  # 512>512
+        in0 = self.ce0(out5)
 
-        e0 = self.ce0(c5, c4)  # 512>512
-        e1 = self.ce1(e0, c3)  # 512>256
-        e2 = self.ce2(e1, c2)  # 256>128
-        e3 = self.ce3(e2, c1)  # 128>64
+        in1 = self.ce1(out4, in0)  # 512>512
+        in2 = self.ce2(out3, in1)  # 512>256
+        in3 = self.ce3(out2, in2)  # 256>128
+        in4 = self.ce4(out, in3)  # 128>64
+        f = self.ce5(in4)
+        f = self.final(f)
+        return f
 
 
-#%% tests
+# %% tests
 x = torch.randn(1, 3, 256, 256)
-# model = CoarseNet()
-# o = model(x)
+model = CoarseNet()
+o = model(x)
 
-model = Contract(3, 64, is_cl=True)
-out = model(x)  # 64*128*128
-model = Contract(64, 128)
-out2 = model(out)  # 128*64*64
-model = Contract(128, 256)
-out3 = model(out2)  # 256*32*32
-model = Contract(256, 512)
-out4 = model(out3)  # 512*16*16
-model = Contract(512, 512, is_cl=True)
-out5 = model(out4)  # 512*8*8
-
-model = Expand(512, 512, first=True)
-in1 = model(out4, out5)  # 512*16*16
-model = Expand(512, 256)
-in2 = model(in1, out3)  # 256*32*32
-model = Expand(256, 128)
-in3 = model(in2, out2)  # 128*64*64
-model = Expand(128, 64)
-in4 = model(in3, out)  # 64*128*128
-model = C(64, 3)  # 3*256*256
-final = model(in4)  # 3*256*256
+#
+# model = Contract(3, 64, module='cl')
+# out = model(x)  # 64*128*128
+# model = Contract(64, 128)
+# out2 = model(out)  # 128*64*64
+# model = Contract(128, 256)
+# out3 = model(out2)  # 256*32*32
+# model = Contract(256, 512)
+# out4 = model(out3)  # 512*16*16
+# model = Contract(512, 512, module='cl')
+# out5 = model(out4)  # 512*8*8
+# model = Contract(512, 512, module='ce')  # CE1
+# in0 = model(out5)
+#
+# model = Expand(512, 256)  # CE2
+# in1 = model(out4, in0)  # 512*16*16
+# model = Expand(256, 128)  # CE3
+# in2 = model(out3, in1)  # 256*32*32
+# model = Expand(128, 64)  # CE4
+# in3 = model(out2, in2)  # 128*64*64
+# model = Expand(64, 64)  # CE5
+# in4 = model(out, in3)  # 64*128*128
+# model = CE(64, 64, 3, 1)
+# in5 = model(in4)
+# model = C(64, 3)  # 3*256*256
+# final = model(in5)  # 3*256*256
