@@ -193,33 +193,6 @@ class CoarseNet(nn.Module):
 
 
 # %% tests
-x = torch.randn(1, 3, 256, 256)
+z = torch.randn(1, 3, 256, 256)
 model = CoarseNet()
-o = model(x)
-
-#
-# model = Contract(3, 64, module='cl')
-# out = model(x)  # 64*128*128
-# model = Contract(64, 128)
-# out2 = model(out)  # 128*64*64
-# model = Contract(128, 256)
-# out3 = model(out2)  # 256*32*32
-# model = Contract(256, 512)
-# out4 = model(out3)  # 512*16*16
-# model = Contract(512, 512, module='cl')
-# out5 = model(out4)  # 512*8*8
-# model = Contract(512, 512, module='ce')  # CE1
-# in0 = model(out5)
-#
-# model = Expand(512, 256)  # CE2
-# in1 = model(out4, in0)  # 512*16*16
-# model = Expand(256, 128)  # CE3
-# in2 = model(out3, in1)  # 256*32*32
-# model = Expand(128, 64)  # CE4
-# in3 = model(out2, in2)  # 128*64*64
-# model = Expand(64, 64)  # CE5
-# in4 = model(out, in3)  # 64*128*128
-# model = CE(64, 64, 3, 1)
-# in5 = model(in4)
-# model = C(64, 3)  # 3*256*256
-# final = model(in5)  # 3*256*256
+o = model(z)
