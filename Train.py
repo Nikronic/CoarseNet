@@ -5,9 +5,11 @@ from torchvision import transforms
 from utils.preprocess import *
 import torch
 from torch.utils.data import DataLoader
+from utils.Loss import CoarseLoss
 
 import torch.optim as optim
 import torch.nn as nn
+
 
 # %% define data sets and their loaders
 custom_transforms = transforms.Compose([
@@ -27,7 +29,7 @@ train_loader = DataLoader(dataset=train_dataset,
                           num_workers=2)
 
 # %% initialize network, loss and optimizer
-criterion = nn.MSELoss(reduction='mean')
+criterion = CoarseLoss(w1=50, w2=1)
 
 coarsenet = CoarseNet()
 optimizer = optim.Adam(coarsenet.parameters(), lr=0.0001)
@@ -37,12 +39,13 @@ def init_weights(m):
     """
     Initialize weights of layers using Kaiming Normal (He et al.) as argument of "Apply" function of
     "nn.Module"
+
     :param m: Layer to initialize
     :return: None
     """
 
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        torch.nn.init.kaiming_normal_(m.weight)  # TODO there is a "uniform" version too. Check out which is correct
+        torch.nn.init.kaiming_normal_(m.weight)  # TODO there is a "uniform" version too!
         m.bias.data.fill_(0.0)
 
 
@@ -53,6 +56,7 @@ coarsenet.apply(init_weights)
 def train_model(net, data_loader, optimizer, criterion, epochs=2):
     """
     Train model
+
     :param net: Parameters of defined neural network
     :param data_loader: A data loader object defined on train data set
     :param epochs: Number of epochs to train model
@@ -94,10 +98,11 @@ train_model(coarsenet, train_loader, optimizer, criterion)
 # %% test
 def test_model(net, data_loader):
     """
-    Return loss on test set
+    Return loss on test
+
     :param net: The trained NN network
     :param data_loader: Data loader containing test set
-    :return: Loss value over test set in console
+    :return: Print loss value over test set in console
     """
     running_loss = 0.0
     with torch.no_grad():
@@ -109,7 +114,4 @@ def test_model(net, data_loader):
             running_loss += loss
 
             print('loss: %.3f' % running_loss)
-    return running_loss
-
-
-test_model(coarsenet, train_loader)
+    return running_loss, outputs

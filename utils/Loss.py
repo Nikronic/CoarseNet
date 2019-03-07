@@ -7,6 +7,7 @@ class CoarseLoss(nn.Module):
     def __init__(self, w1=50, w2=1):
         """
         A weighted sum of pixel-wise L1 loss and sum of L2 loss of Gram matrices.
+
         :param w1: weight of L1  (pixel-wise)
         :param w2: weight of L2 loss (Gram matrix)
         """
@@ -14,9 +15,9 @@ class CoarseLoss(nn.Module):
         self.w1 = w1
         self.w2 = w2
         self.l1 = nn.L1Loss(reduction='mean')
-        self.l2 = nn.MSELoss(reduction='mean')
+        self.l2 = nn.MSELoss(reduction='mean')  # TODO Im not sure about this. SO I used default value!
 
-    # https://github.com/pytorch/tutorials/blob/master/advanced_source/neural_style_tutorial.py
+    # reference: https://github.com/pytorch/tutorials/blob/master/advanced_source/neural_style_tutorial.py
     @staticmethod
     def gram_matrix(mat):
         """

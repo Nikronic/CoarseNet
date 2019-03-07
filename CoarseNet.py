@@ -193,6 +193,6 @@ class CoarseNet(nn.Module):
 
 
 # %% tests
-z = torch.randn(1, 3, 256, 256)
-model = CoarseNet()
-o = model(z)
+# z = torch.randn(1, 3, 256, 256)
+# model = CoarseNet()
+# o = model(z)

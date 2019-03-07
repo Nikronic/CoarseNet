@@ -16,13 +16,8 @@ custom_transforms = transforms.Compose([
     ToTensor(),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
-# TODO out input images based on custom Dataset class, are PIL images, so they are [0,1].
-#  Now we have to transform them into [-1,1]. when we should do it??? The idea is PIL images
-#  are normalized already and ToTensor also normalizing them to [0, 1], So i remove
-#  normalizing layer!
 
 # https://discuss.pytorch.org/t/what-does-pil-images-of-range-0-1-mean-and-how-do-we-save-images-as-that-format/2103
-
 train_dataset = PlacesDataset(txt_path='data/filelist.txt',
                               img_dir='data.tar',
                               transform=custom_transforms)
@@ -33,14 +28,14 @@ train_dataset = PlacesDataset(txt_path='data/filelist.txt',
 train_loader = DataLoader(dataset=train_dataset,
                           batch_size=128,
                           shuffle=True,
-                          num_workers=2)  # TODO change to desired one on colab
+                          num_workers=2)
 
-criterion = nn.MSELoss(reduction='mean')  # TODO define custom loss
+criterion = nn.MSELoss(reduction='mean')
 optimizer = optim.Adam(params, lr=0.0001)
 
 
 def init_weights(m):
-    torch.nn.init.kaiming_normal_(m.weight)  # TODO there is a "uniform" version too. Check out which is correct
+    torch.nn.init.kaiming_normal_(m.weight)
     m.bias.data.fill_(0.0)
 
 
