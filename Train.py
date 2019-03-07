@@ -45,8 +45,11 @@ def init_weights(m):
     """
 
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        torch.nn.init.kaiming_normal_(m.weight)  # TODO there is a "uniform" version too!
+        torch.nn.init.kaiming_normal_(m.weight, mode='fan_out')  # TODO there is a "uniform" version too!
         m.bias.data.fill_(0.0)
+    elif isinstance(m, nn.BatchNorm2d):  # reference: https://github.com/pytorch/pytorch/issues/12259
+        nn.init.constant_(m.weight, 1)
+        nn.init.constant_(m.bias, 0)
 
 
 coarsenet.apply(init_weights)
@@ -115,3 +118,4 @@ def test_model(net, data_loader):
 
             print('loss: %.3f' % running_loss)
     return running_loss, outputs
+
