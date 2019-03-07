@@ -1,3 +1,4 @@
+# %% import library
 from CoarseNet import CoarseNet
 from torchvision.transforms import ToPILImage, ToTensor, RandomResizedCrop, RandomRotation, RandomHorizontalFlip
 from torchvision import transforms
@@ -8,6 +9,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.nn as nn
 
+# %% define data sets and their loaders
 custom_transforms = transforms.Compose([
     RandomResizedCrop(size=224, scale=(0.8, 1.2)),
     RandomRotation(degrees=(-30, 30)),
@@ -24,6 +26,7 @@ train_loader = DataLoader(dataset=train_dataset,
                           shuffle=True,
                           num_workers=2)
 
+# %% initialize network, loss and optimizer
 criterion = nn.MSELoss(reduction='mean')
 
 coarsenet = CoarseNet()
@@ -46,6 +49,7 @@ def init_weights(m):
 coarsenet.apply(init_weights)
 
 
+# %% train model
 def train_model(net, data_loader, optimizer, criterion, epochs=2):
     """
     Train model
@@ -77,11 +81,35 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
 
             # print statistics
             running_loss += loss.item()
-            if i % 2000 == 1999:  # print every 2000 mini-batches
+            if i % 1 == 0:  # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, running_loss / 2000))
+                      (epoch + 1, i + 1, running_loss))
                 running_loss = 0.0
     print('Finished Training')
 
 
 train_model(coarsenet, train_loader, optimizer, criterion)
+
+
+# %% test
+def test_model(net, data_loader):
+    """
+    Return loss on test set
+    :param net: The trained NN network
+    :param data_loader: Data loader containing test set
+    :return: Loss value over test set in console
+    """
+    running_loss = 0.0
+    with torch.no_grad():
+        for data in data_loader:
+            X = data['X']
+            y_d = data['y_descreen']
+            outputs = net(X)
+            loss = criterion(outputs, y_d)
+            running_loss += loss
+
+            print('loss: %.3f' % running_loss)
+    return running_loss
+
+
+test_model(coarsenet, train_loader)

@@ -23,6 +23,7 @@ def generate_halftone(file):
     cmyk = im.convert('CMYK')
     dots = halftone(im, cmyk, sample, angles, shape=random.getrandbits(1))
     new = Image.merge('CMYK', dots)
+    new = new.convert('RGB')
     return new
 
 

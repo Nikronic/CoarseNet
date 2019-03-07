@@ -143,6 +143,7 @@ def get_image_by_name(img_dir, name):
                 image = Image.open(io.BytesIO(image))
                 return image
 
-# z = get_image_by_name('data.tar', 'Places365_val_00000002.jpg')
-# ze = canny_edge_detector(z)
-# ze = Image.fromarray(ze)
+#
+# z = get_image_by_name('data/data.tar', 'Places365_val_00000002.jpg')
+# zd = generate_halftone(z)
+# zd = zd.convert('RGB')
