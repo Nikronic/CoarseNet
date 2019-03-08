@@ -120,6 +120,8 @@ def test_model(net, data_loader):
         for data in data_loader:
             X = data['X']
             y_d = data['y_descreen']
+            X = X.to(device)
+            y_d = y_d.to(device)
             outputs = net(X)
             loss = criterion(outputs, y_d)
             running_loss += loss
@@ -127,5 +129,4 @@ def test_model(net, data_loader):
             print('loss: %.3f' % running_loss)
     return running_loss, outputs
 
-
-test_model(coarsenet, train_loader)
+# test_model(coarsenet, train_loader)
