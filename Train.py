@@ -102,7 +102,7 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
     print('Finished Training')
 
 
-train_model(coarsenet, train_loader, optimizer, criterion)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=25)
 
 
 # %% test
@@ -127,3 +127,5 @@ def test_model(net, data_loader):
             print('loss: %.3f' % running_loss)
     return running_loss, outputs
 
+
+test_model(coarsenet, train_loader)
