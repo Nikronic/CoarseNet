@@ -142,7 +142,4 @@ def get_image_by_name(img_dir, name):
     return image
 
 
-#
 # z = get_image_by_name('data/data.tar', 'Places365_val_00000002.jpg')
-# zd = generate_halftone(z)
-# zd = zd.convert('RGB')

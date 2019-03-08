@@ -1,7 +1,7 @@
 # %% import library
 from CoarseNet import CoarseNet
-from torchvision.transforms import ToPILImage, ToTensor, RandomResizedCrop, RandomRotation, RandomHorizontalFlip
-from torchvision import transforms
+from torchvision.transforms import Compose, ToPILImage, ToTensor, RandomResizedCrop, RandomRotation, \
+    RandomHorizontalFlip
 from utils.preprocess import *
 import torch
 from torch.utils.data import DataLoader
@@ -9,10 +9,13 @@ from utils.Loss import CoarseLoss
 
 import torch.optim as optim
 import torch.nn as nn
+from torch.backends import cudnn
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+cudnn.benchmark = True
 
 # %% define data sets and their loaders
-custom_transforms = transforms.Compose([
+custom_transforms = Compose([
     RandomResizedCrop(size=224, scale=(0.8, 1.2)),
     RandomRotation(degrees=(-30, 30)),
     RandomHorizontalFlip(p=0.5),
@@ -26,12 +29,13 @@ train_dataset = PlacesDataset(txt_path='data/filelist.txt',
 train_loader = DataLoader(dataset=train_dataset,
                           batch_size=128,
                           shuffle=True,
-                          num_workers=2)
+                          num_workers=2,
+                          pin_memory=True)
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
 
-coarsenet = CoarseNet()
+coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=0.0001)
 
 
@@ -75,7 +79,9 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
             # get the inputs
             X = data['X']
             y_d = data['y_descreen']
-            y_e = data['y_edge']
+
+            X = X.to(device)
+            y_d = y_d.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
