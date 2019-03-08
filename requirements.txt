@@ -1,0 +1,11 @@
+pytorch
+torch
+torchvision
+numpy
+PIL
+random
+skimage
+tarfile
+io
+pandas
+__future__

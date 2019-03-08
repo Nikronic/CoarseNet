@@ -72,6 +72,7 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
     :return: None
     """
 
+    net.train()
     for epoch in range(epochs):  # loop over the dataset multiple times
 
         running_loss = 0.0
@@ -113,6 +114,7 @@ def test_model(net, data_loader):
     :param data_loader: Data loader containing test set
     :return: Print loss value over test set in console
     """
+    net.eval()
     running_loss = 0.0
     with torch.no_grad():
         for data in data_loader:
