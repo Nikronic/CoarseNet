@@ -94,8 +94,9 @@ class PlacesDataset(Dataset):
         image = np.array(image)
         image = color.rgb2grey(image)
         edges = feature.canny(image, sigma=1)  # TODO: the sigma hyper parameter value is not defined in the paper.
-        edges = edges.astype(float)  # torch tensors need float
-        edges = Image.fromarray(edges)
+        size = edges.shape[::-1]
+        databytes = np.packbits(edges, axis=1)
+        edges = Image.frombytes(mode='1', size=size, data=databytes)
         return edges
 
 
