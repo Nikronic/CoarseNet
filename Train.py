@@ -36,7 +36,7 @@ train_loader = DataLoader(dataset=train_dataset,
 criterion = CoarseLoss(w1=50, w2=1)
 
 coarsenet = CoarseNet().to(device)
-optimizer = optim.Adam(coarsenet.parameters(), lr=0.0001)
+optimizer = optim.Adam(coarsenet.parameters(), lr=1)
 
 
 def init_weights(m):
@@ -102,9 +102,6 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
     print('Finished Training')
 
 
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=25)
-
-
 # %% test
 def test_model(net, data_loader):
     """
@@ -130,3 +127,5 @@ def test_model(net, data_loader):
     return running_loss, outputs
 
 # test_model(coarsenet, train_loader)
+
+# train_model(coarsenet, train_loader, optimizer, criterion, epochs=25)

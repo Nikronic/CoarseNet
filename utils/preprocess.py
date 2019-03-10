@@ -10,8 +10,9 @@ import io
 import pandas as pd
 
 from torch.utils.data import Dataset
+import torch
 
-from utils.Halftoning.halftone import generate_halftone
+from utils.Halftone.halftone import generate_halftone
 
 
 class PlacesDataset(Dataset):
@@ -93,7 +94,8 @@ class PlacesDataset(Dataset):
         :param image: PIL image
         :return: Binary numpy array
         """
-        image = self.to_pil(image)
+        if type(image) == torch.Tensor:
+            image = self.to_pil(image)
         image = image.convert(mode='L')
         image = np.array(image)
         edges = feature.canny(image, sigma=1)  # TODO: the sigma hyper parameter value is not defined in the paper.
