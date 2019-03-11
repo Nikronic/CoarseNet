@@ -11,33 +11,9 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.backends import cudnn
 
+import argparse
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-cudnn.benchmark = True
-
-# %% define data sets and their loaders
-custom_transforms = Compose([
-    RandomResizedCrop(size=224, scale=(0.8, 1.2)),
-    RandomRotation(degrees=(-30, 30)),
-    RandomHorizontalFlip(p=0.5),
-    ToTensor(),
-    RandomNoise(p=0.5, mean=0, std=0.1)])
-
-train_dataset = PlacesDataset(txt_path='data/filelist.txt',
-                              img_dir='data/data.tar',
-                              transform=custom_transforms)
-
-train_loader = DataLoader(dataset=train_dataset,
-                          batch_size=128,
-                          shuffle=True,
-                          num_workers=2,
-                          pin_memory=True)
-
-# %% initialize network, loss and optimizer
-criterion = CoarseLoss(w1=50, w2=1)
-
-coarsenet = CoarseNet().to(device)
-optimizer = optim.Adam(coarsenet.parameters(), lr=1)
-
 
 def init_weights(m):
     """
@@ -54,9 +30,6 @@ def init_weights(m):
     elif isinstance(m, nn.BatchNorm2d):  # reference: https://github.com/pytorch/pytorch/issues/12259
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
-
-
-coarsenet.apply(init_weights)
 
 
 # %% train model
@@ -124,8 +97,53 @@ def test_model(net, data_loader):
             running_loss += loss
 
             print('loss: %.3f' % running_loss)
-    return running_loss, outputs
+    return running_loss
 
-# test_model(coarsenet, train_loader)
 
-# train_model(coarsenet, train_loader, optimizer, criterion, epochs=25)
+parser = argparse.ArgumentParser()
+parser.add_argument("txt", help='path to the text file')
+parser.add_argument("img", help='path to the images tar archive (uncompressed)')
+parser.add_argument("bs", help='int number as batch size', type=int)
+parser.add_argument("es", help='int number as number of epochs', type=int)
+parser.add_argument("nw", help='number of workers (1 to 8 recommended)', type=int)
+parser.add_argument("lr", help='learning rate of optimizer (=0.0001)', type=float)
+parser.add_argument("cudnn", help='enable(1) cudnn.benchmark or not(0)', type=int)
+parser.add_argument("pm", help='enable(1) pin_memory or not(0)', type=int)
+args = parser.parse_args()
+
+if args.cudnn == 1:
+    cudnn.benchmark = True
+else:
+    cudnn.benchmark = False
+
+if args.pm == 1:
+    pin_memory = True
+else:
+    pin_memory = False
+
+# %% define data sets and their loaders
+custom_transforms = Compose([
+    RandomResizedCrop(size=224, scale=(0.8, 1.2)),
+    RandomRotation(degrees=(-30, 30)),
+    RandomHorizontalFlip(p=0.5),
+    ToTensor(),
+    RandomNoise(p=0.5, mean=0, std=0.1)])
+
+train_dataset = PlacesDataset(txt_path=args.txt,
+                              img_dir=args.img,
+                              transform=custom_transforms)
+
+train_loader = DataLoader(dataset=train_dataset,
+                          batch_size=args.bs,
+                          shuffle=True,
+                          num_workers=args.nw,
+                          pin_memory=pin_memory)
+
+# %% initialize network, loss and optimizer
+criterion = CoarseLoss(w1=50, w2=1)
+
+coarsenet = CoarseNet().to(device)
+optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
+coarsenet.apply(init_weights)
+
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
