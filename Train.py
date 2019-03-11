@@ -101,14 +101,14 @@ def test_model(net, data_loader):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("txt", help='path to the text file')
-parser.add_argument("img", help='path to the images tar archive (uncompressed)')
-parser.add_argument("bs", help='int number as batch size', type=int)
-parser.add_argument("es", help='int number as number of epochs', type=int)
-parser.add_argument("nw", help='number of workers (1 to 8 recommended)', type=int)
-parser.add_argument("lr", help='learning rate of optimizer (=0.0001)', type=float)
-parser.add_argument("cudnn", help='enable(1) cudnn.benchmark or not(0)', type=int)
-parser.add_argument("pm", help='enable(1) pin_memory or not(0)', type=int)
+parser.add_argument("--txt", help='path to the text file', default='data/filelist.txt')
+parser.add_argument("--img", help='path to the images tar archive (uncompressed)', default='data/data.tar')
+parser.add_argument("--bs", help='int number as batch size', default=128, type=int)
+parser.add_argument("--es", help='int number as number of epochs', default=25, type=int)
+parser.add_argument("--nw", help='number of workers (1 to 8 recommended)', default=4, type=int)
+parser.add_argument("--lr", help='learning rate of optimizer (=0.0001)', default=0.0001, type=float)
+parser.add_argument("--cudnn", help='enable(1) cudnn.benchmark or not(0)', default=0, type=int)
+parser.add_argument("--pm", help='enable(1) pin_memory or not(0)', default=0, type=int)
 args = parser.parse_args()
 
 if args.cudnn == 1:
