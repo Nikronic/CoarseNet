@@ -15,7 +15,7 @@ class CoarseLoss(nn.Module):
         self.w1 = w1
         self.w2 = w2
         self.l1 = nn.L1Loss(reduction='mean')
-        self.l2 = nn.MSELoss(reduction='mean')  # TODO Im not sure about this. SO I used default value!
+        self.l2 = nn.MSELoss(reduction='sum')
 
     # reference: https://github.com/pytorch/tutorials/blob/master/advanced_source/neural_style_tutorial.py
     @staticmethod

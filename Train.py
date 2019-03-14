@@ -15,6 +15,7 @@ import argparse
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def init_weights(m):
     """
     Initialize weights of layers using Kaiming Normal (He et al.) as argument of "Apply" function of
@@ -68,36 +69,34 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
 
             # print statistics
             running_loss += loss.item()
-            if i % 1 == 0:  # print every 2000 mini-batches
-                print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, running_loss))
-                running_loss = 0.0
+
+            print(epoch + 1, ',', i + 1, 'loss:', running_loss)
     print('Finished Training')
 
 
 # %% test
-def test_model(net, data_loader):
-    """
-    Return loss on test
-
-    :param net: The trained NN network
-    :param data_loader: Data loader containing test set
-    :return: Print loss value over test set in console
-    """
-    net.eval()
-    running_loss = 0.0
-    with torch.no_grad():
-        for data in data_loader:
-            X = data['X']
-            y_d = data['y_descreen']
-            X = X.to(device)
-            y_d = y_d.to(device)
-            outputs = net(X)
-            loss = criterion(outputs, y_d)
-            running_loss += loss
-
-            print('loss: %.3f' % running_loss)
-    return running_loss
+# def test_model(net, data_loader):
+#     """
+#     Return loss on test
+#
+#     :param net: The trained NN network
+#     :param data_loader: Data loader containing test set
+#     :return: Print loss value over test set in console
+#     """
+#     net.eval()
+#     running_loss = 0.0
+#     with torch.no_grad():
+#         for data in data_loader:
+#             X = data['X']
+#             y_d = data['y_descreen']
+#             X = X.to(device)
+#             y_d = y_d.to(device)
+#             outputs = net(X)
+#             loss = criterion(outputs, y_d)
+#             running_loss += loss
+#
+#             print('loss: %.3f' % running_loss)
+#     return running_loss
 
 
 parser = argparse.ArgumentParser()
@@ -110,6 +109,7 @@ parser.add_argument("--lr", help='learning rate of optimizer (=0.0001)', default
 parser.add_argument("--cudnn", help='enable(1) cudnn.benchmark or not(0)', default=0, type=int)
 parser.add_argument("--pm", help='enable(1) pin_memory or not(0)', default=0, type=int)
 args = parser.parse_args()
+
 
 if args.cudnn == 1:
     cudnn.benchmark = True
@@ -129,21 +129,21 @@ custom_transforms = Compose([
     ToTensor(),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
-train_dataset = PlacesDataset(txt_path=args.txt,
-                              img_dir=args.img,
+train_dataset = PlacesDataset(txt_path='data/filelist.txt',
+                              img_dir='data/data.tar',
                               transform=custom_transforms)
 
 train_loader = DataLoader(dataset=train_dataset,
-                          batch_size=args.bs,
+                          batch_size=2,
                           shuffle=True,
-                          num_workers=args.nw,
-                          pin_memory=pin_memory)
+                          num_workers=2,
+                          pin_memory=False)
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
 
 coarsenet = CoarseNet().to(device)
-optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
+optimizer = optim.Adam(coarsenet.parameters(), lr=0.1)
 coarsenet.apply(init_weights)
 
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=2)
