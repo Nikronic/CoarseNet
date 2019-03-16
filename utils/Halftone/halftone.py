@@ -86,7 +86,7 @@ def generate_halftone(im):
     for x,i in enumerate(cmyk):
         channel_Rotation = i.rotate(angles[x], expand=1)
         channel = np.asarray(channel_Rotation) > get_resDmat(channel_Rotation.size,dithMat_sample)
-        channel = Image.fromarray(channel * 255).convert('L').rotate(-angles[x],expand=1)
+        channel = Image.fromarray((channel * 255).astype('uint8')).convert('L').rotate(-angles[x], expand=1)
         w,h = channel.size
         im_x,im_y = i.size
         x1 = (w-im_x)/2

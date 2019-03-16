@@ -149,4 +149,4 @@ coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=0.1)
 coarsenet.apply(init_weights)
 
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=5)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=1)
