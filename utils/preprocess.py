@@ -17,7 +17,7 @@ from utils.Halftone.halftone import generate_halftone
 
 
 class PlacesDataset(Dataset):
-    def __init__(self, txt_path='data/filelist.txt', img_dir='data.tar', transform=None):
+    def __init__(self, txt_path='filelist.txt', img_dir='data.tar', transform=None):
         """
                 Initialize data set as a list of IDs corresponding to each item of data set
 
@@ -80,7 +80,7 @@ class PlacesDataset(Dataset):
         :return: a sample of data as a dict
         """
 
-        if index == (self.__len__() - 1) and self.get_image_selector:  # Close tarfile opened in __init__
+        if index == (self.__len__() - 1) and self.get_image_selector:  # close tarfile opened in __init__
             self.tf.close()
 
         if self.get_image_selector:  # note: we prefer to extract then process!

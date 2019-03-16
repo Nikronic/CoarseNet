@@ -26,7 +26,7 @@ def init_weights(m):
     """
 
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        torch.nn.init.kaiming_normal_(m.weight, mode='fan_out')  # TODO there is a "uniform" version too!
+        torch.nn.init.kaiming_normal_(m.weight, mode='fan_in')
         m.bias.data.fill_(0.0)
     elif isinstance(m, nn.BatchNorm2d):  # reference: https://github.com/pytorch/pytorch/issues/12259
         nn.init.constant_(m.weight, 1)
@@ -75,35 +75,38 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
 
 
 # %% test
-# def test_model(net, data_loader):
-#     """
-#     Return loss on test
-#
-#     :param net: The trained NN network
-#     :param data_loader: Data loader containing test set
-#     :return: Print loss value over test set in console
-#     """
-#     net.eval()
-#     running_loss = 0.0
-#     with torch.no_grad():
-#         for data in data_loader:
-#             X = data['X']
-#             y_d = data['y_descreen']
-#             X = X.to(device)
-#             y_d = y_d.to(device)
-#             outputs = net(X)
-#             loss = criterion(outputs, y_d)
-#             running_loss += loss
-#
-#             print('loss: %.3f' % running_loss)
-#     return running_loss
+def test_model(net, data_loader):
+    """
+    Return loss on test
+
+    :param net: The trained NN network
+    :param data_loader: Data loader containing test set
+    :return: Print loss value over test set in console
+    """
+    net.eval()
+    running_loss = 0.0
+    with torch.no_grad():
+        for data in data_loader:
+            X = data['X']
+            y_d = data['y_descreen']
+            X = X.to(device)
+            y_d = y_d.to(device)
+            outputs = net(X)
+            loss = criterion(outputs, y_d)
+            running_loss += loss
+
+            print('loss: %.3f' % running_loss)
+    return running_loss
 
 
+# %% arg pars
 parser = argparse.ArgumentParser()
-parser.add_argument("--txt", help='path to the text file', default='data/filelist.txt')
-parser.add_argument("--img", help='path to the images tar archive (uncompressed)', default='data/data.tar')
+parser.add_argument("--txt", help='path to the text file', default='filelist.txt')
+parser.add_argument("--img", help='path to the images tar(bug!) archive (uncompressed) or folder', default='data')
+parser.add_argument("--txt_t", help='path to the text file of test set', default='filelist.txt')
+parser.add_argument("--img_t", help='path to the images tar archive (uncompressed) of testset ', default='data')
 parser.add_argument("--bs", help='int number as batch size', default=128, type=int)
-parser.add_argument("--es", help='int number as number of epochs', default=25, type=int)
+parser.add_argument("--es", help='int number as number of epochs', default=10, type=int)
 parser.add_argument("--nw", help='number of workers (1 to 8 recommended)', default=4, type=int)
 parser.add_argument("--lr", help='learning rate of optimizer (=0.0001)', default=0.0001, type=float)
 parser.add_argument("--cudnn", help='enable(1) cudnn.benchmark or not(0)', default=0, type=int)
@@ -129,8 +132,8 @@ custom_transforms = Compose([
     ToTensor(),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
-train_dataset = PlacesDataset(txt_path='data/filelist.txt',
-                              img_dir='data/data.tar',
+train_dataset = PlacesDataset(txt_path='filelist.txt',
+                              img_dir='data',
                               transform=custom_transforms)
 
 train_loader = DataLoader(dataset=train_dataset,
@@ -146,4 +149,4 @@ coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=0.1)
 coarsenet.apply(init_weights)
 
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=2)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=5)
