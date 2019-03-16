@@ -158,8 +158,8 @@ train_loader = DataLoader(dataset=train_dataset,
                           num_workers=args.nw,
                           pin_memory=pin_memory)
 
-test_dataset = PlacesDataset(txt_path='filelist.txt',
-                             img_dir='data',
+test_dataset = PlacesDataset(txt_path=args.txt_t,
+                             img_dir=args.img_t,
                              transform=ToTensor())
 
 test_loader = DataLoader(dataset=test_dataset,
