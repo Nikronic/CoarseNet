@@ -96,8 +96,24 @@ def test_model(net, data_loader):
             running_loss += loss
 
             print('loss: %.3f' % running_loss)
-    return running_loss
+    return outputs
 
+
+def show_test(image_batch):
+    to_pil = ToPILImage()
+    fs = []
+    for i in range(len(image_batch)):
+        img = to_pil(image_batch[i])
+        fs.append(img)
+    x, y = fs[0].size
+    ncol = 3
+    nrow = 3
+    cvs = Image.new('RGB', (x * ncol, y * nrow))
+    for i in range(len(fs)):
+        px, py = x * int(i / nrow), y * (i % nrow)
+        cvs.paste((fs[i]), (px, py))
+    # cvs.save('out.png', format='png')
+    cvs.show()
 
 # %% arg pars
 parser = argparse.ArgumentParser()
@@ -142,15 +158,15 @@ train_loader = DataLoader(dataset=train_dataset,
                           num_workers=args.nw,
                           pin_memory=pin_memory)
 
-test_dataset = PlacesDataset(txt_path=args.txt_t,
-                             img_dir=args.img_t,
+test_dataset = PlacesDataset(txt_path='filelist.txt',
+                             img_dir='data',
                              transform=ToTensor())
 
 test_loader = DataLoader(dataset=test_dataset,
-                         batch_size=args.bs,
+                         batch_size=128,
                          shuffle=False,
-                         num_workers=args.nw,
-                         pin_memory=pin_memory)
+                         num_workers=0,
+                         pin_memory=False)
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
@@ -161,4 +177,6 @@ coarsenet.apply(init_weights)
 
 train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
 
-test_model(coarsenet, test_loader)
+test_s = test_model(coarsenet, test_loader)
+
+show_test(test_s)
