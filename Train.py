@@ -132,21 +132,33 @@ custom_transforms = Compose([
     ToTensor(),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
-train_dataset = PlacesDataset(txt_path='filelist.txt',
-                              img_dir='data',
+train_dataset = PlacesDataset(txt_path=args.txt,
+                              img_dir=args.img,
                               transform=custom_transforms)
 
 train_loader = DataLoader(dataset=train_dataset,
-                          batch_size=2,
+                          batch_size=args.bs,
                           shuffle=True,
-                          num_workers=2,
-                          pin_memory=False)
+                          num_workers=args.nw,
+                          pin_memory=pin_memory)
+
+test_dataset = PlacesDataset(txt_path=args.txt_t,
+                             img_dir=args.img_t,
+                             transform=None)
+
+test_loader = DataLoader(dataset=test_dataset,
+                         batch_size=args.bs,
+                         shuffle=False,
+                         num_workers=args.nw,
+                         pin_memory=pin_memory)
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
 
 coarsenet = CoarseNet().to(device)
-optimizer = optim.Adam(coarsenet.parameters(), lr=0.1)
+optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
 
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=1)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
+
+test_model(coarsenet, test_loader)

@@ -87,6 +87,8 @@ def generate_halftone(im):
         channel_Rotation = i.rotate(angles[x], expand=1)
         channel = np.asarray(channel_Rotation) > get_resDmat(channel_Rotation.size,dithMat_sample)
         channel = Image.fromarray((channel * 255).astype('uint8')).convert('L').rotate(-angles[x], expand=1)
+        # https://stackoverflow.com/questions/27622834/write-numpy-ndarray-to-image
+        # reason of casting to 'uint8'
         w,h = channel.size
         im_x,im_y = i.size
         x1 = (w-im_x)/2
