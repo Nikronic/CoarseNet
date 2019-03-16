@@ -144,7 +144,7 @@ train_loader = DataLoader(dataset=train_dataset,
 
 test_dataset = PlacesDataset(txt_path=args.txt_t,
                              img_dir=args.img_t,
-                             transform=None)
+                             transform=ToTensor())
 
 test_loader = DataLoader(dataset=test_dataset,
                          batch_size=args.bs,
