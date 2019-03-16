@@ -103,7 +103,7 @@ def show_test(image_batch):
     to_pil = ToPILImage()
     fs = []
     for i in range(len(image_batch)):
-        img = to_pil(image_batch[i])
+        img = to_pil(image_batch[i].cpu())
         fs.append(img)
     x, y = fs[0].size
     ncol = 3
