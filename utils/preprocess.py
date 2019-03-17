@@ -17,7 +17,7 @@ from utils.Halftone.halftone import generate_halftone
 
 
 class PlacesDataset(Dataset):
-    def __init__(self, txt_path='filelist.txt', img_dir='data.tar', transform=None):
+    def __init__(self, txt_path='filelist.txt', img_dir='data', transform=None):
         """
                 Initialize data set as a list of IDs corresponding to each item of data set
 

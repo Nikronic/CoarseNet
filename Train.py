@@ -112,7 +112,7 @@ def show_test(image_batch):
     for i in range(len(fs)):
         px, py = x * int(i / nrow), y * (i % nrow)
         cvs.paste((fs[i]), (px, py))
-    # cvs.save('out.png', format='png')
+    cvs.save('out.png', format='png')
     cvs.show()
 
 # %% arg pars
@@ -170,13 +170,8 @@ test_loader = DataLoader(dataset=test_dataset,
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
-
 coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
-
 train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
-
-test_s = test_model(coarsenet, test_loader)
-
-show_test(test_s)
+show_test(test_model(coarsenet, test_loader))
