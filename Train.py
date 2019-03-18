@@ -100,6 +100,12 @@ def test_model(net, data_loader):
 
 
 def show_test(image_batch):
+    """
+    Get a batch of images of torch.Tensor type and show them as a single gridded PIL image
+
+    :param image_batch: A Batch of torch.Tensor contain images
+    :return: An array of PIL images
+    """
     to_pil = ToPILImage()
     fs = []
     for i in range(len(image_batch)):
@@ -114,6 +120,7 @@ def show_test(image_batch):
         cvs.paste((fs[i]), (px, py))
     cvs.save('out.png', format='png')
     cvs.show()
+    return fs
 
 # %% arg pars
 parser = argparse.ArgumentParser()

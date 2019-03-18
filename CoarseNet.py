@@ -39,8 +39,7 @@ class CBL(nn.Module):
 
         super(CBL, self).__init__()
         layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1),
-                  nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2),
-                  nn.LeakyReLU(0.2)]
+                  nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
