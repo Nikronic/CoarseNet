@@ -41,13 +41,12 @@ Except `depth`, all parameters are same as paper. Default value of `depth` in pa
 
 ### Features
 
-- Run on CPU
-- Controllable `Depth` of network
+- Ability to change runtime device to CPU and GPU (only one GPU currently supported)
+- Parallelism (Run on multiple GPU)
 
 ## Upcoming Features
 
-- Ability to change runtime device
-- Parallelism (Run on multiple GPU)
+- Multi-GPU processing
 
 ## Reference
 
