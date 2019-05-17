@@ -42,7 +42,7 @@ Except `depth`, all parameters are same as paper. Default value of `depth` in pa
 ### Features
 
 - Ability to change runtime device to CPU and GPU (only one GPU currently supported)
-- Parallelism (Run on multiple GPU)
+- Parallelism (Run on multiple threads on CPU for preprocessing steps)
 
 ## Upcoming Features
 
