@@ -18,7 +18,7 @@ class CL(nn.Module):
         assert (input_channel > 0 and output_channel > 0)
 
         super(CL, self).__init__()
-        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2)]
+        layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1), nn.LeakyReLU(0.2, inplace=True)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -39,7 +39,7 @@ class CBL(nn.Module):
 
         super(CBL, self).__init__()
         layers = [nn.Conv2d(input_channel, output_channel, kernel_size=4, stride=2, padding=1),
-                  nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2)]
+                  nn.BatchNorm2d(num_features=output_channel), nn.LeakyReLU(0.2, inplace=True)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -62,7 +62,7 @@ class CE(nn.Module):
 
         super(CE, self).__init__()
         layers = [nn.ConvTranspose2d(input_channel, output_channel, kernel_size=ks, stride=s, padding=1),
-                  nn.ELU(alpha=1)]
+                  nn.ELU(alpha=1, inplace=True)]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
