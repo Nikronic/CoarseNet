@@ -6,6 +6,7 @@ from utils.preprocess import *
 import torch
 from torch.utils.data import DataLoader
 from utils.Loss import CoarseLoss
+from vgg import vgg16_bn
 
 import torch.optim as optim
 import torch.nn as nn
@@ -34,7 +35,7 @@ def init_weights(m):
 
 
 # %% train model
-def train_model(net, data_loader, optimizer, criterion, epochs=2):
+def train_model(networks, data_loader, optimizer, criterion, epochs=2):
     """
     Train model
 
@@ -46,6 +47,9 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
     :return: None
     """
 
+    net = networks[0]
+    vgg = networks[1]
+    vgg.eval()
     net.train()
     for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -58,12 +62,13 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
             X = X.to(device)
             y_d = y_d.to(device)
 
-            # zero the parameter gradients
             optimizer.zero_grad()
 
-            # forward + backward + optimize
             outputs = net(X)
-            loss = criterion(outputs, y_d)
+            outputs_vgg = vgg(outputs)
+            y_d_vgg = vgg(y_d)
+
+            loss = criterion(outputs_vgg, y_d_vgg) # we need to calculate loss using vgg's output
             loss.backward()
             optimizer.step()
 
@@ -178,7 +183,8 @@ test_loader = DataLoader(dataset=test_dataset,
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
 coarsenet = CoarseNet().to(device)
+vgg16 = vgg16_bn(pretrained=True).to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
-train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
+train_model([coarsenet, vgg16], train_loader, optimizer, criterion, epochs=args.es)
 show_test(test_model(coarsenet, test_loader))
