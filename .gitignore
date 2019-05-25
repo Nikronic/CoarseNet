@@ -109,3 +109,6 @@ venv.bak/
 
 # tensorboardX
 .runs/
+
+# ignore pretrained .pth files
+pretrained/
