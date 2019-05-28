@@ -114,7 +114,7 @@ def vgg16_bn(pretrained=False, **kwargs):
     """
     if pretrained:
         kwargs['init_weights'] = False
-    model = VGG(make_layers(cfg['D'], batch_norm=True), **kwargs)
+    model = VGG(make_layers(cfg['D'], batch_norm=True), inner_layers=__inner_layer__['vgg16_bn'], **kwargs)
     if pretrained:
         model.load_state_dict(load_url(model_urls['vgg16_bn']))
     return model
@@ -142,7 +142,7 @@ def vgg19_bn(pretrained=False, **kwargs):
     """
     if pretrained:
         kwargs['init_weights'] = False
-    model = VGG(make_layers(cfg['E'], batch_norm=True), **kwargs)
+    model = VGG(make_layers(cfg['E'], batch_norm=True), inner_layers=__inner_layer__['vgg19_bn'], **kwargs)
     if pretrained:
         model.load_state_dict(load_url(model_urls['vgg19_bn']))
     return model
@@ -172,3 +172,9 @@ def get_maxpool_layer_indexes(model):
     for i, d in enumerate(model.features):
         if str(d).__contains__('MaxPool'):
             pooling_indexes.append(i)
+
+
+# %% tests
+m = vgg19_bn()
+x = torch.randn(1, 3, 256, 256)
+x = m(x)
