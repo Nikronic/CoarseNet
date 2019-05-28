@@ -20,12 +20,19 @@ model_urls = {
     'vgg19_bn': 'https://download.pytorch.org/models/vgg19_bn-c79401a0.pth',
 }
 
+__inner_layer__ = {
+    'vgg16_bn': {13, 43},
+    'vgg19_bn': {13, 52}
+}
+
+
 
 # %% VGG model
 class VGG(nn.Module):
-    def __init__(self, features, num_classes=1000, init_weights=True):
+    def __init__(self, features, inner_layers, num_classes=1000, init_weights=True):
         super(VGG, self).__init__()
         self.features = features
+        self.inner_layers = inner_layers
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 4096),
@@ -40,11 +47,12 @@ class VGG(nn.Module):
             self._initialize_weights()
 
     def forward(self, x):
-        x = self.features(x)
-        x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
-        x = self.classifier(x)
-        return x
+        results = []
+        for i, layer in enumerate(self.features):
+            x = layer(x)
+            if i in self.inner_layers:
+                results.append(x)
+        return results
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -151,3 +159,16 @@ def load_url(url, model_dir='./pretrained', map_location=None):
         urlretrieve(url, cached_file)
     return torch.load(cached_file, map_location=map_location)
 
+
+def get_maxpool_layer_indexes(model):
+    """
+    Gets a model and returns the indexes of layers containing 'MaxPool' as a list
+
+    :param model: A nn.Module model
+    :return: A list of integer numbers
+    """
+
+    pooling_indexes = []
+    for i, d in enumerate(model.features):
+        if str(d).__contains__('MaxPool'):
+            pooling_indexes.append(i)
