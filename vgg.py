@@ -87,8 +87,6 @@ def make_layers(cfg, batch_norm=False):
 
 
 cfg = {
-    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
     'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
@@ -175,6 +173,7 @@ def get_maxpool_layer_indexes(model):
         if str(d).__contains__('MaxPool'):
             pooling_indexes.append(i)
     return pooling_indexes
+
 # %% tests
 # m = vgg16_bn()
 # x = torch.randn(1, 3, 256, 256)
