@@ -20,8 +20,10 @@ model_urls = {
     'vgg19_bn': 'https://download.pytorch.org/models/vgg19_bn-c79401a0.pth',
 }
 
+# value of 'vgg19_bn' key is the number of maxpool layers for DetailsNet
+# value of 'vgg16_bn' key is the number of conv layers after each pooling layer for CoarseNet
 __inner_layer__ = {
-    'vgg16_bn': {13, 43},
+    'vgg16_bn': {0, 7, 14, 24, 34},
     'vgg19_bn': {13, 52}
 }
 
@@ -172,9 +174,11 @@ def get_maxpool_layer_indexes(model):
     for i, d in enumerate(model.features):
         if str(d).__contains__('MaxPool'):
             pooling_indexes.append(i)
-
-
+    return pooling_indexes
 # %% tests
-m = vgg19_bn()
-x = torch.randn(1, 3, 256, 256)
-x = m(x)
+# m = vgg16_bn()
+# x = torch.randn(1, 3, 256, 256)
+# x = m(x)
+# len(x)
+# for l in x:
+#     print(l.size())
