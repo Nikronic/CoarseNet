@@ -6,7 +6,6 @@ from utils.preprocess import *
 import torch
 from torch.utils.data import DataLoader
 from utils.Loss import CoarseLoss
-from vgg import vgg16_bn
 
 import torch.optim as optim
 import torch.nn as nn
@@ -35,7 +34,7 @@ def init_weights(m):
 
 
 # %% train model
-def train_model(networks, data_loader, optimizer, criterion, epochs=2):
+def train_model(net, data_loader, optimizer, criterion, epochs=2):
     """
     Train model
 
@@ -47,9 +46,6 @@ def train_model(networks, data_loader, optimizer, criterion, epochs=2):
     :return: None
     """
 
-    net = networks[0]
-    vgg = networks[1]
-    vgg.eval()
     net.train()
     for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -65,16 +61,11 @@ def train_model(networks, data_loader, optimizer, criterion, epochs=2):
             optimizer.zero_grad()
 
             outputs = net(X)
-            outputs_vgg = vgg(outputs)
-            y_d_vgg = vgg(y_d)
-
-            loss = criterion(outputs_vgg, y_d_vgg) # we need to calculate loss using vgg's output
+            loss = criterion(outputs, y_d)
             loss.backward()
             optimizer.step()
 
-            # print statistics
             running_loss += loss.item()
-
             print(epoch + 1, ',', i + 1, 'loss:', running_loss)
     print('Finished Training')
 
@@ -88,6 +79,7 @@ def test_model(net, data_loader):
     :param data_loader: Data loader containing test set
     :return: Print loss value over test set in console
     """
+
     net.eval()
     running_loss = 0.0
     with torch.no_grad():
@@ -99,7 +91,6 @@ def test_model(net, data_loader):
             outputs = net(X)
             loss = criterion(outputs, y_d)
             running_loss += loss
-
             print('loss: %.3f' % running_loss)
     return outputs
 
@@ -128,6 +119,19 @@ def show_test(image_batch):
     return fs
 
 # %% arg pars
+# we use below class to be able to debug project using IPython based IDEs like jupyter or Pycharm cell mode.
+# class args:
+#     txt='filelist.txt'
+#     img='data'
+#     txt_t = 'filelist.txt'
+#     img_t = 'data'
+#     bs = 1
+#     es = 2
+#     nw = 1
+#     lr = 0.0001
+#     cudnn=0
+#     pm = 0
+#
 parser = argparse.ArgumentParser()
 parser.add_argument("--txt", help='path to the text file', default='filelist.txt')
 parser.add_argument("--img", help='path to the images tar(bug!) archive (uncompressed) or folder', default='data')
@@ -183,8 +187,7 @@ test_loader = DataLoader(dataset=test_dataset,
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1)
 coarsenet = CoarseNet().to(device)
-vgg16 = vgg16_bn(pretrained=True).to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
-train_model([coarsenet, vgg16], train_loader, optimizer, criterion, epochs=args.es)
+train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
 show_test(test_model(coarsenet, test_loader))
