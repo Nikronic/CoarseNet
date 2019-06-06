@@ -1,7 +1,7 @@
 # %% import library
 from CoarseNet import CoarseNet
 from torchvision.transforms import Compose, ToPILImage, ToTensor, RandomResizedCrop, RandomRotation, \
-    RandomHorizontalFlip
+    RandomHorizontalFlip, Normalize
 from utils.preprocess import *
 import torch
 from torch.utils.data import DataLoader
@@ -114,24 +114,24 @@ def show_test(image_batch):
     for i in range(len(fs)):
         px, py = x * int(i / nrow), y * (i % nrow)
         cvs.paste((fs[i]), (px, py))
-    cvs.save('out.png', format='png')
+    # cvs.save('out.png', format='png')
     cvs.show()
     return fs
 
 # %% arg pars
 # we use below class to be able to debug project using IPython based IDEs like jupyter or Pycharm cell mode.
 # class args:
-#     txt='filelist.txt'
-#     img='data'
-#     txt_t = 'filelist.txt'
-#     img_t = 'data'
+#     txt='filelist_c.txt'
+#     img='data_c'
+#     txt_t = 'filelist_c.txt'
+#     img_t = 'data_c'
 #     bs = 1
 #     es = 2
 #     nw = 1
-#     lr = 0.0001
+#     lr = 1
 #     cudnn=0
 #     pm = 0
-#
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--txt", help='path to the text file', default='filelist.txt')
 parser.add_argument("--img", help='path to the images tar(bug!) archive (uncompressed) or folder', default='data')
@@ -162,6 +162,7 @@ custom_transforms = Compose([
     RandomRotation(degrees=(-30, 30)),
     RandomHorizontalFlip(p=0.5),
     ToTensor(),
+    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
 train_dataset = PlacesDataset(txt_path=args.txt,
@@ -185,7 +186,7 @@ test_loader = DataLoader(dataset=test_dataset,
                          pin_memory=False)
 
 # %% initialize network, loss and optimizer
-criterion = CoarseLoss(w1=50, w2=1)
+criterion = CoarseLoss(w1=50, w2=1).to(device)
 coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
