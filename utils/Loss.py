@@ -20,9 +20,11 @@ class CoarseLoss(nn.Module):
         self.w1 = w1
         self.w2 = w2
         self.l1 = nn.L1Loss(reduction='mean')
-        self.l2 = nn.MSELoss(reduction='mean')
+        self.l2 = nn.MSELoss(reduction='sum')
+        # https://github.com/PatWie/tensorflow-recipes/blob/33962bb45e81f3619bfa6a8aeae5556cc7534caf/EnhanceNet/enet_pat.py#L169
+
         self.weight_vgg = weight_vgg
-        self.vgg16_bn = vgg16_bn(pretrained=True)
+        self.vgg16_bn = vgg16_bn(pretrained=True).eval()
 
     # reference: https://github.com/pytorch/tutorials/blob/master/advanced_source/neural_style_tutorial.py
     @staticmethod
@@ -43,6 +45,7 @@ class CoarseLoss(nn.Module):
         y_vgg = self.vgg16_bn(y)
         y_pred_vgg = self.vgg16_bn(y_pred)
         loss_vgg = [self.l2(self.gram_matrix(ly), self.gram_matrix(lp)) for ly, lp in zip(y_vgg, y_pred_vgg)]
+        # TODO gradient explodes after first epoch
 
         loss = self.w1 * self.l1(y, y_pred) + \
                self.w2 * np.dot(loss_vgg, self.weight_vgg)
