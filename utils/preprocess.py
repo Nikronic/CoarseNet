@@ -91,36 +91,14 @@ class PlacesDataset(Dataset):
         # generate halftone image
         X = generate_halftone(y_descreen)
 
-        # generate edge-map
-        y_edge = self.canny_edge_detector(y_descreen)
-
         if self.transform is not None:
             X = self.transform(X)
             y_descreen = self.transform(y_descreen)
-            y_edge = self.transform(y_edge)
 
         sample = {'X': X,
-                  'y_descreen': y_descreen,
-                  'y_edge': y_edge}
+                  'y_descreen': y_descreen}
 
         return sample
-
-    def canny_edge_detector(self, image):
-        """
-        Returns a binary image with same size of source image which each pixel determines belonging to an edge or not.
-
-        :param image: PIL image
-        :return: Binary numpy array
-        """
-        if type(image) == torch.Tensor:
-            image = self.to_pil(image)
-        image = image.convert(mode='L')
-        image = np.array(image)
-        edges = feature.canny(image, sigma=1)  # TODO: the sigma hyper parameter value is not defined in the paper.
-        size = edges.shape[::-1]
-        databytes = np.packbits(edges, axis=1)
-        edges = Image.frombytes(mode='1', size=size, data=databytes)
-        return edges
 
 
 # https://discuss.pytorch.org/t/adding-gaussion-noise-in-cifar10-dataset/961/2
