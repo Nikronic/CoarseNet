@@ -174,10 +174,3 @@ def get_maxpool_layer_indexes(model):
             pooling_indexes.append(i)
     return pooling_indexes
 
-# %% tests
-# m = vgg16_bn()
-# x = torch.randn(1, 3, 256, 256)
-# x = m(x)
-# len(x)
-# for l in x:
-#     print(l.size())

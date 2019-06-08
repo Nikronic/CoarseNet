@@ -114,23 +114,10 @@ def show_test(image_batch):
     for i in range(len(fs)):
         px, py = x * int(i / nrow), y * (i % nrow)
         cvs.paste((fs[i]), (px, py))
-    # cvs.save('out.png', format='png')
+    cvs.save('out.png', format='png')
     cvs.show()
     return fs
 
-# %% arg pars
-# we use below class to be able to debug project using IPython based IDEs like jupyter or Pycharm cell mode.
-# class args:
-#     txt='filelist_c.txt'
-#     img='data_c'
-#     txt_t = 'filelist_c.txt'
-#     img_t = 'data_c'
-#     bs = 1
-#     es = 2
-#     nw = 1
-#     lr = 1
-#     cudnn=0
-#     pm = 0
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--txt", help='path to the text file', default='filelist.txt')

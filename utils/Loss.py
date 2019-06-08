@@ -45,7 +45,6 @@ class CoarseLoss(nn.Module):
         y_vgg = self.vgg16_bn(y)
         y_pred_vgg = self.vgg16_bn(y_pred)
         loss_vgg = [self.l2(self.gram_matrix(ly), self.gram_matrix(lp)) for ly, lp in zip(y_vgg, y_pred_vgg)]
-        # TODO gradient explodes after first epoch
 
         loss = self.w1 * self.l1(y, y_pred) + \
                self.w2 * np.dot(loss_vgg, self.weight_vgg)
