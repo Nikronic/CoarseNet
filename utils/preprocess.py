@@ -19,15 +19,15 @@ from utils.Halftone.halftone import generate_halftone
 class PlacesDataset(Dataset):
     def __init__(self, txt_path='filelist.txt', img_dir='data', transform=None):
         """
-                Initialize data set as a list of IDs corresponding to each item of data set
+        Initialize data set as a list of IDs corresponding to each item of data set
 
-                :param img_dir: path to image files as a uncompressed tar archive
-                :param txt_path: a text file containing names of all of images line by line
-                :param transform: apply some transforms like cropping, rotating, etc on input image
+        :param img_dir: path to image files as a uncompressed tar archive
+        :param txt_path: a text file containing names of all of images line by line
+        :param transform: apply some transforms like cropping, rotating, etc on input image
 
-                :return a 3-value dict containing input image (y_descreen) as ground truth, input image X as halftone image
-                        and edge-map (y_edge) of ground truth image to feed into the network.
-                """
+        :return a 3-value dict containing input image (y_descreen) as ground truth, input image X as halftone image
+                and edge-map (y_edge) of ground truth image to feed into the network.
+        """
 
         df = pd.read_csv(txt_path, sep=' ', index_col=0)
         self.img_names = df.index.values
@@ -38,6 +38,8 @@ class PlacesDataset(Dataset):
         self.to_pil = ToPILImage()
         self.get_image_selector = True if img_dir.__contains__('tar') else False
         self.tf = tarfile.open(self.img_dir) if self.get_image_selector else None
+		# we need to apply a subset of transform to our target images or labels
+        self.transform_gt = Compose(self.transform.transforms[:-1])  # we do not want noise in ground-truth images
 
     def get_image_from_tar(self, name):
         """
@@ -91,9 +93,13 @@ class PlacesDataset(Dataset):
         # generate halftone image
         X = generate_halftone(y_descreen)
 
+        seed = np.random.randint(2147483647)
+        random.seed(seed)
+
         if self.transform is not None:
             X = self.transform(X)
-            y_descreen = self.transform(y_descreen)
+            random.seed(seed)
+            y_descreen = self.transform_gt(y_descreen)
 
         sample = {'X': X,
                   'y_descreen': y_descreen}
