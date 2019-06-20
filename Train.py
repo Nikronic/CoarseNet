@@ -95,28 +95,28 @@ def test_model(net, data_loader):
     return outputs
 
 
-def show_test(image_batch):
+def show_batch_image(image_batch):
     """
-    Get a batch of images of torch.Tensor type and show them as a single gridded PIL image
+    Show a sample grid image which contains some sample of test set result
 
-    :param image_batch: A Batch of torch.Tensor contain images
-    :return: An array of PIL images
+    :param image_batch: The output batch of test set
+    :return: PIL image of all images of the input batch
     """
+
     to_pil = ToPILImage()
     fs = []
     for i in range(len(image_batch)):
         img = to_pil(image_batch[i].cpu())
         fs.append(img)
     x, y = fs[0].size
-    ncol = 3
-    nrow = 3
+    ncol = int(np.ceil(np.sqrt(len(image_batch))))
+    nrow = int(np.ceil(np.sqrt(len(image_batch))))
     cvs = Image.new('RGB', (x * ncol, y * nrow))
     for i in range(len(fs)):
         px, py = x * int(i / nrow), y * (i % nrow)
         cvs.paste((fs[i]), (px, py))
     cvs.save('out.png', format='png')
     cvs.show()
-    return fs
 
 
 parser = argparse.ArgumentParser()
@@ -178,4 +178,4 @@ coarsenet = CoarseNet().to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
 train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
-show_test(test_model(coarsenet, test_loader))
+show_batch_image(test_model(coarsenet, test_loader))
