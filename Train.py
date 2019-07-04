@@ -47,11 +47,11 @@ def train_model(net, data_loader, optimizer, criterion, epochs=2):
     """
 
     net.train()
-    for epoch in range(epochs):  # loop over the dataset multiple times
+    for epoch in range(epochs):
 
         running_loss = 0.0
         for i, data in enumerate(data_loader, 0):
-            # get the inputs
+
             X = data['X']
             y_d = data['y_descreen']
 
@@ -164,13 +164,14 @@ train_loader = DataLoader(dataset=train_dataset,
 
 test_dataset = PlacesDataset(txt_path=args.txt_t,
                              img_dir=args.img_t,
-                             transform=ToTensor())
+                             transform=ToTensor(),
+                             test=True)
 
 test_loader = DataLoader(dataset=test_dataset,
-                         batch_size=128,
+                         batch_size=args.bs,
                          shuffle=False,
-                         num_workers=0,
-                         pin_memory=False)
+                         num_workers=args.nw,
+                         pin_memory=pin_memory)
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1).to(device)
