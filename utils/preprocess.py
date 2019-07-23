@@ -119,7 +119,7 @@ class RandomNoise(object):
         return img
 
 
-class UnNormalize_Native(object):
+class UnNormalizeNative(object):
     """
     Unnormalize an input tensor given the mean and std
     """
