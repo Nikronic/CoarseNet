@@ -117,3 +117,23 @@ class RandomNoise(object):
             noise = torch.empty(*img.size(), dtype=torch.float, requires_grad=False)
             return img+noise.normal_(self.mean, self.std)
         return img
+
+
+class UnNormalize_Native(object):
+    """
+    Unnormalize an input tensor given the mean and std
+    """
+
+    def __init__(self, mean, std):
+        self.mean = torch.tensor(mean)
+        self.std = torch.tensor(std)
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+
+        return Normalize((-mean / std).tolist(), (1.0 / std).tolist())
