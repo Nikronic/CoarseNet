@@ -95,7 +95,7 @@ def test_model(net, data_loader):
     return outputs
 
 
-def show_batch_image(image_batch):
+def show_batch_image(image_batch, name='out.png'):
     """
     Show a sample grid image which contains some sample of test set result
 
@@ -115,7 +115,7 @@ def show_batch_image(image_batch):
     for i in range(len(fs)):
         px, py = x * int(i / nrow), y * (i % nrow)
         cvs.paste((fs[i]), (px, py))
-    cvs.save('out.png', format='png')
+    cvs.save(name, format='png')
     cvs.show()
 
 
