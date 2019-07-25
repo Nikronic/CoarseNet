@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from PIL import Image
 from skimage import feature, color
-from torchvision.transforms import ToTensor, ToPILImage, Compose
+from torchvision.transforms import ToTensor, ToPILImage, Normalize, Compose
 import numpy as np
 import random
 
@@ -136,4 +136,4 @@ class UnNormalizeNative(object):
             Tensor: Normalized image.
         """
 
-        return Normalize((-mean / std).tolist(), (1.0 / std).tolist())
+        return Normalize((-self.mean / self.std).tolist(), (1.0 / self.std).tolist())
