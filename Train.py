@@ -179,63 +179,7 @@ td_temp = PlacesDataset(txt_path='filelist.txt',
                         transform=ToTensor(),
                         test=True)
 
-
-def online_mean_std(dataset, batch_size, method='strong'):
-    """
-    Calculate mean and std of a dataset in lazy mode (online)
-
-    :param dataset: Dataset object corresponding to your dataset
-    :param batch_size: higher size, more accurate approximation
-    :param method: weak: fast but less accurate, strong: slow but very accurate - recommended = strong
-    :return: A tuple of (mean, std) with size of (3,)
-    """
-
-    if method=='weak':
-        loader = DataLoader(dataset=dataset,
-                             batch_size=batch_size,
-                             shuffle=False,
-                             num_workers=1,
-                             pin_memory=0)
-        mean = 0.
-        std = 0.
-        nb_samples = 0.
-        for data in loader:
-            data = data['X']
-            batch_samples = data.size(0)
-            data = data.view(batch_samples, data.size(1), -1)
-            mean += data.mean(2).sum(0)
-            std += data.std(2).sum(0)
-            nb_samples += batch_samples
-
-        mean /= nb_samples
-        std /= nb_samples
-
-        return mean, std
-
-    elif method=='strong':
-        loader = DataLoader(dataset=dataset,
-                            batch_size=1,
-                            shuffle=False,
-                            num_workers=1,
-                            pin_memory=0)
-        cnt = 0
-        fst_moment = torch.empty(3)
-        snd_moment = torch.empty(3)
-
-        for data in loader:
-            data = data['X']
-            b, c, h, w = data.shape
-            nb_pixels = b * h * w
-            sum_ = torch.sum(data, dim=[0, 2, 3])
-            sum_of_square = torch.sum(data ** 2, dim=[0, 2, 3])
-            fst_moment = (cnt * fst_moment + sum_) / (cnt + nb_pixels)
-            snd_moment = (cnt * snd_moment + sum_of_square) / (cnt + nb_pixels)
-
-            cnt += nb_pixels
-
-        return fst_moment, torch.sqrt(snd_moment - fst_moment ** 2)
-
-online_mean_std(td_temp, batch_size=2, method='strong')
+mean_std = OnlineMeanStd()(td_temp, batch_size=1, method='strong')
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1).to(device)
@@ -246,3 +190,4 @@ train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)
 show_batch_image(test_model(coarsenet, test_loader))
 
 
+# Out[36]: (tensor([0.3918, 0.3725, 0.3191]), tensor([0.4881, 0.4835, 0.4661]))
