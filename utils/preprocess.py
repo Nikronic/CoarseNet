@@ -136,7 +136,7 @@ class UnNormalizeNative(object):
             Tensor: Normalized image.
         """
 
-        return Normalize((-self.mean / self.std).tolist(), (1.0 / self.std).tolist())
+        return Normalize((-self.mean / self.std).tolist(), (1.0 / self.std).tolist())(tensor)
 
 
 class OnlineMeanStd:
