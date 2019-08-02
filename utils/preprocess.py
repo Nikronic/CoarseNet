@@ -164,7 +164,7 @@ class OnlineMeanStd:
             std = 0.
             nb_samples = 0.
             for data in loader:
-                data = data['X']
+                data = data['y_descreen']
                 batch_samples = data.size(0)
                 data = data.view(batch_samples, data.size(1), -1)
                 mean += data.mean(2).sum(0)
@@ -187,7 +187,7 @@ class OnlineMeanStd:
             snd_moment = torch.empty(3)
 
             for data in loader:
-                data = data['X']
+                data = data['y_descreen']
                 b, c, h, w = data.shape
                 nb_pixels = b * h * w
                 sum_ = torch.sum(data, dim=[0, 2, 3])
