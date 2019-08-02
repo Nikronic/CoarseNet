@@ -143,13 +143,21 @@ if args.pm == 1:
 else:
     pin_memory = False
 
+# %% get dataset specific mean and std values
+train_dataset = PlacesDataset(txt_path=args.txt,
+                              img_dir=args.img,
+                              transform=ToTensor(),
+                              test=True)
+
+mean, std = OnlineMeanStd()(train_dataset, batch_size=1, method='strong')
+
 # %% define data sets and their loaders
 custom_transforms = Compose([
     RandomResizedCrop(size=224, scale=(0.8, 1.2)),
     RandomRotation(degrees=(-30, 30)),
     RandomHorizontalFlip(p=0.5),
     ToTensor(),
-    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    Normalize(mean=mean, std=std),
     RandomNoise(p=0.5, mean=0, std=0.1)])
 
 train_dataset = PlacesDataset(txt_path=args.txt,
@@ -172,14 +180,6 @@ test_loader = DataLoader(dataset=test_dataset,
                          shuffle=False,
                          num_workers=args.nw,
                          pin_memory=pin_memory)
-
-# %% Acquire Mean and STD of dataset
-td_temp = PlacesDataset(txt_path='filelist.txt',
-                        img_dir='data',
-                        transform=ToTensor(),
-                        test=True)
-
-mean_std = OnlineMeanStd()(td_temp, batch_size=1, method='strong')
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1).to(device)
