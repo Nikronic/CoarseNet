@@ -1,5 +1,6 @@
 # %% import library
 from CoarseNet import CoarseNet
+from pix2pix_unet import G
 from torchvision.transforms import Compose, ToPILImage, ToTensor, RandomResizedCrop, RandomRotation, \
     RandomHorizontalFlip, Normalize
 from utils.preprocess import *
@@ -183,7 +184,7 @@ test_loader = DataLoader(dataset=test_dataset,
 
 # %% initialize network, loss and optimizer
 criterion = CoarseLoss(w1=50, w2=1).to(device)
-coarsenet = CoarseNet().to(device)
+coarsenet = G(input_nc=3, output_nc=3, nf=64).to(device)
 optimizer = optim.Adam(coarsenet.parameters(), lr=args.lr)
 coarsenet.apply(init_weights)
 train_model(coarsenet, train_loader, optimizer, criterion, epochs=args.es)

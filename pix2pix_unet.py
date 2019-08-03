@@ -193,4 +193,4 @@ class G(nn.Module):
     return dout1
 
 # %% test
-model = G(input_nc=3, output_nc=3, nf=64)
+# model = G(input_nc=3, output_nc=3, nf=64)
