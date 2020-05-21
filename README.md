@@ -51,3 +51,9 @@ Except `depth`, all parameters are same as paper. Default value of `depth` in pa
 ## Reference
 
 Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015)
+
+## Citation
+Please cite this project as
+Mohammad Doosti Lakhani. (2020, May 21). Nikronic/CoarseNet: DOI Release (Version v0.1-alpha). Zenodo. http://doi.org/10.5281/zenodo.3838582
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3838582.svg)](https://doi.org/10.5281/zenodo.3838582)
