@@ -39,21 +39,12 @@ In this repo, I implemented U-net using Pytorch and Python 3.6.7.
 
 Except `depth`, all parameters are same as paper. Default value of `depth` in paper is `5` (look at the shape at top of page). So you can have deeper or shallower network by changing `deep` variable.<br>
 
-### Features
-
-- Ability to change runtime device to CPU and GPU (only one GPU currently supported)
-- Parallelism (Run on multiple threads on CPU for preprocessing steps)
-
-## Upcoming Features
-
-- Multi-GPU processing
-
 ## Reference
 
 Convolutional Networks for Biomedical Image Segmentation (Ronneberger et al., 2015)
 
 ## Citation
 Please cite this project as
-Mohammad Doosti Lakhani. (2020, May 21). Nikronic/CoarseNet: DOI Release (Version v0.1-alpha). Zenodo. http://doi.org/10.5281/zenodo.3838582
+Nikan Doosti. (2020). Nikronic/CoarseNet: DOI Release (v0.1-alpha). Zenodo. https://doi.org/10.5281/zenodo.3838582
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3838582.svg)](https://doi.org/10.5281/zenodo.3838582)
